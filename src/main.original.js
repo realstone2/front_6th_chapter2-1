@@ -13,16 +13,6 @@ const p4 = 'p4';
 const PRODUCT_5 = `p5`;
 let cartDisp;
 function main() {
-  var root;
-  let header;
-  let gridContainer;
-  let leftColumn;
-  let selectorContainer;
-  let rightColumn;
-  let manualToggle;
-  let manualOverlay;
-  let manualColumn;
-  let lightningDelay;
   totalAmt = 0;
   itemCnt = 0;
   lastSel = null;
@@ -73,8 +63,8 @@ function main() {
       suggestSale: false,
     },
   ];
-  var root = document.getElementById('app');
-  header = document.createElement('div');
+  const root = document.getElementById('app');
+  const header = document.createElement('div');
   header.className = 'mb-8';
   header.innerHTML = `
     <h1 class="text-xs font-medium tracking-extra-wide uppercase mb-2">🛒 Hanghae Online Store</h1>
@@ -83,11 +73,11 @@ function main() {
   `;
   sel = document.createElement('select');
   sel.id = 'product-select';
-  gridContainer = document.createElement('div');
-  leftColumn = document.createElement('div');
+  const gridContainer = document.createElement('div');
+  const leftColumn = document.createElement('div');
   leftColumn['className'] =
     'bg-white border border-gray-200 p-8 overflow-y-auto';
-  selectorContainer = document.createElement('div');
+  const selectorContainer = document.createElement('div');
   selectorContainer.className = 'mb-6 pb-6 border-b border-gray-200';
   sel.className = 'w-full p-3 border border-gray-300 rounded-lg text-base mb-3';
   gridContainer.className =
@@ -107,7 +97,7 @@ function main() {
   cartDisp = document.createElement('div');
   leftColumn.appendChild(cartDisp);
   cartDisp.id = 'cart-items';
-  rightColumn = document.createElement('div');
+  const rightColumn = document.createElement('div');
   rightColumn.className = 'bg-black text-white p-8 flex flex-col';
   rightColumn.innerHTML = `
     <h2 class="text-xs font-medium mb-5 tracking-extra-wide uppercase">Order Summary</h2>
@@ -139,7 +129,7 @@ function main() {
     </p>
   `;
   sum = rightColumn.querySelector('#cart-total');
-  manualToggle = document.createElement('button');
+  const manualToggle = document.createElement('button');
   manualToggle.onclick = function () {
     manualOverlay.classList.toggle('hidden');
     manualColumn.classList.toggle('translate-x-full');
@@ -151,7 +141,7 @@ function main() {
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
     </svg>
   `;
-  manualOverlay = document.createElement('div');
+  const manualOverlay = document.createElement('div');
   manualOverlay.className =
     'fixed inset-0 bg-black/50 z-40 hidden transition-opacity duration-300';
   manualOverlay.onclick = function (e) {
@@ -160,7 +150,7 @@ function main() {
       manualColumn.classList.add('translate-x-full');
     }
   };
-  manualColumn = document.createElement('div');
+  const manualColumn = document.createElement('div');
   manualColumn.className =
     'fixed right-0 top-0 h-full w-80 bg-white shadow-2xl p-6 overflow-y-auto z-50 transform translate-x-full transition-transform duration-300';
   manualColumn.innerHTML = `
@@ -236,13 +226,10 @@ function main() {
   root.appendChild(gridContainer);
   root.appendChild(manualToggle);
   root.appendChild(manualOverlay);
-  let initStock = 0;
-  for (let i = 0; i < prodList.length; i++) {
-    initStock += prodList[i].q;
-  }
+
   onUpdateSelectOptions();
   handleCalculateCartStuff();
-  lightningDelay = Math.random() * 10000;
+  const lightningDelay = Math.random() * 10000;
   setTimeout(() => {
     setInterval(function () {
       const luckyIdx = Math.floor(Math.random() * prodList.length);
@@ -258,8 +245,6 @@ function main() {
   }, lightningDelay);
   setTimeout(function () {
     setInterval(function () {
-      if (cartDisp.children.length === 0) {
-      }
       if (lastSel) {
         let suggest = null;
 
@@ -300,7 +285,7 @@ function onUpdateSelectOptions() {
     const _p = prodList[idx];
     totalStock = totalStock + _p.q;
   }
-  for (var i = 0; i < prodList.length; i++) {
+  for (let i = 0; i < prodList.length; i++) {
     (function () {
       const item = prodList[i];
       opt = document.createElement('option');
@@ -358,33 +343,16 @@ function onUpdateSelectOptions() {
   }
 }
 function handleCalculateCartStuff() {
-  let cartItems;
   let subTot;
-  let itemDiscounts;
-  let lowStockItems;
+  const itemDiscounts = [];
+  const lowStockItems = [];
   let idx;
-  var originalTotal;
-  let bulkDisc;
-  let itemDisc;
   let savedAmount;
-  let summaryDetails;
-  let totalDiv;
-  let loyaltyPointsDiv;
   let points;
-  let discountInfoDiv;
-  let itemCountElement;
-  let previousCount;
-  let stockMsg;
-  let pts;
-  let hasP1;
-  let hasP2;
-  let loyaltyDiv;
   totalAmt = 0;
   itemCnt = 0;
-  cartItems = cartDisp.children;
+  const cartItems = cartDisp.children;
   subTot = 0;
-  itemDiscounts = [];
-  lowStockItems = [];
   for (idx = 0; idx < prodList.length; idx++) {
     if (prodList[idx].q < 5 && prodList[idx].q > 0) {
       lowStockItems.push(prodList[idx].name);
@@ -400,12 +368,9 @@ function handleCalculateCartStuff() {
         }
       }
       const qtyElem = cartItems[i].querySelector('.quantity-number');
-      let q;
-      let itemTot;
-      let disc;
-      q = parseInt(qtyElem.textContent);
-      itemTot = curItem.val * q;
-      disc = 0;
+      const q = parseInt(qtyElem.textContent);
+      const itemTot = curItem.val * q;
+      let disc = 0;
       itemCnt += q;
       subTot += itemTot;
       const itemDiv = cartItems[i];
@@ -443,7 +408,7 @@ function handleCalculateCartStuff() {
     })();
   }
   let discRate = 0;
-  var originalTotal = subTot;
+  const originalTotal = subTot;
   if (itemCnt >= 30) {
     totalAmt = (subTot * 75) / 100;
     discRate = 25 / 100;
@@ -468,11 +433,11 @@ function handleCalculateCartStuff() {
   }
   document.getElementById('item-count').textContent =
     '🛍️ ' + itemCnt + ' items in cart';
-  summaryDetails = document.getElementById('summary-details');
+  const summaryDetails = document.getElementById('summary-details');
   summaryDetails.innerHTML = '';
   if (subTot > 0) {
     for (let i = 0; i < cartItems.length; i++) {
-      var curItem;
+      let curItem;
       for (let j = 0; j < prodList.length; j++) {
         if (prodList[j].id === cartItems[i].id) {
           curItem = prodList[j];
@@ -532,11 +497,11 @@ function handleCalculateCartStuff() {
       </div>
     `;
   }
-  totalDiv = sum.querySelector('.text-2xl');
+  const totalDiv = sum.querySelector('.text-2xl');
   if (totalDiv) {
     totalDiv.textContent = '₩' + Math.round(totalAmt).toLocaleString();
   }
-  loyaltyPointsDiv = document.getElementById('loyalty-points');
+  const loyaltyPointsDiv = document.getElementById('loyalty-points');
   if (loyaltyPointsDiv) {
     points = Math.floor(totalAmt / 1000);
     if (points > 0) {
@@ -547,7 +512,7 @@ function handleCalculateCartStuff() {
       loyaltyPointsDiv.style.display = 'block';
     }
   }
-  discountInfoDiv = document.getElementById('discount-info');
+  const discountInfoDiv = document.getElementById('discount-info');
   discountInfoDiv.innerHTML = '';
 
   if (discRate > 0 && totalAmt > 0) {
@@ -562,15 +527,17 @@ function handleCalculateCartStuff() {
       </div>
     `;
   }
-  itemCountElement = document.getElementById('item-count');
+  const itemCountElement = document.getElementById('item-count');
   if (itemCountElement) {
-    previousCount = parseInt(itemCountElement.textContent.match(/\d+/) || 0);
+    const previousCount = parseInt(
+      itemCountElement.textContent.match(/\d+/) || 0
+    );
     itemCountElement.textContent = '🛍️ ' + itemCnt + ' items in cart';
     if (previousCount !== itemCnt) {
       itemCountElement.setAttribute('data-changed', 'true');
     }
   }
-  stockMsg = '';
+  let stockMsg = '';
 
   for (let stockIdx = 0; stockIdx < prodList.length; stockIdx++) {
     const item = prodList[stockIdx];
@@ -588,22 +555,19 @@ function handleCalculateCartStuff() {
   handleStockInfoUpdate();
   doRenderBonusPoints();
 }
-var doRenderBonusPoints = function () {
-  let basePoints;
+const doRenderBonusPoints = function () {
   let finalPoints;
-  let pointsDetail;
+  const pointsDetail = [];
 
   let hasKeyboard;
   let hasMouse;
   let hasMonitorArm;
-  let nodes;
   if (cartDisp.children.length === 0) {
     document.getElementById('loyalty-points').style.display = 'none';
     return;
   }
-  basePoints = Math.floor(totalAmt / 1000);
+  const basePoints = Math.floor(totalAmt / 1000);
   finalPoints = 0;
-  pointsDetail = [];
 
   if (basePoints > 0) {
     finalPoints = basePoints;
@@ -618,7 +582,7 @@ var doRenderBonusPoints = function () {
   hasKeyboard = false;
   hasMouse = false;
   hasMonitorArm = false;
-  nodes = cartDisp.children;
+  const nodes = cartDisp.children;
   for (const node of nodes) {
     let product = null;
 
@@ -689,13 +653,12 @@ function onGetStockTotal() {
   }
   return sum;
 }
-var handleStockInfoUpdate = function () {
+const handleStockInfoUpdate = function () {
   let infoMsg;
-  let totalStock;
-  let messageOptimizer;
   infoMsg = '';
-  totalStock = onGetStockTotal();
+  const totalStock = onGetStockTotal();
   if (totalStock < 30) {
+    // Handle low stock scenario if needed
   }
   prodList.forEach(function (item) {
     if (item.q < 5) {
@@ -709,21 +672,7 @@ var handleStockInfoUpdate = function () {
   stockInfo.textContent = infoMsg;
 };
 function doUpdatePricesInCart() {
-  let totalCount = 0,
-    j = 0;
-  let cartItems;
-  while (cartDisp.children[j]) {
-    const qty = cartDisp.children[j].querySelector('.quantity-number');
-    totalCount += qty ? parseInt(qty.textContent) : 0;
-    j++;
-  }
-  totalCount = 0;
-  for (j = 0; j < cartDisp.children.length; j++) {
-    totalCount += parseInt(
-      cartDisp.children[j].querySelector('.quantity-number').textContent
-    );
-  }
-  cartItems = cartDisp.children;
+  const cartItems = cartDisp.children;
   for (let i = 0; i < cartItems.length; i++) {
     const itemId = cartItems[i].id;
     let product = null;
@@ -850,7 +799,7 @@ cartDisp.addEventListener('click', function (event) {
     }
     if (tgt.classList.contains('quantity-change')) {
       const qtyChange = parseInt(tgt.dataset.change);
-      var qtyElem = itemElem.querySelector('.quantity-number');
+      const qtyElem = itemElem.querySelector('.quantity-number');
       const currentQty = parseInt(qtyElem.textContent);
       const newQty = currentQty + qtyChange;
       if (newQty > 0 && newQty <= prod.q + currentQty) {
@@ -863,12 +812,13 @@ cartDisp.addEventListener('click', function (event) {
         alert('재고가 부족합니다.');
       }
     } else if (tgt.classList.contains('remove-item')) {
-      var qtyElem = itemElem.querySelector('.quantity-number');
+      const qtyElem = itemElem.querySelector('.quantity-number');
       const remQty = parseInt(qtyElem.textContent);
       prod.q += remQty;
       itemElem.remove();
     }
     if (prod && prod.q < 5) {
+      // Handle low stock scenario if needed
     }
     handleCalculateCartStuff();
     onUpdateSelectOptions();
