@@ -1,9 +1,9 @@
-import { createObserver } from "./createObserver";
-import { shallowEquals } from "./shallowEquals";
+import { createObserver } from './createObserver';
+import { shallowEquals } from './shallowEquals';
 
 export const createStore = <
   S,
-  A = (args: { type: string; payload?: unknown }) => S
+  A = (args: { type: string; payload?: unknown }) => S,
 >(
   reducer: (state: S, action: A) => S,
   initialState: S,

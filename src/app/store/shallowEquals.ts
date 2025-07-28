@@ -1,16 +1,17 @@
-const isIterable = (obj: object): obj is Iterable<unknown> => Symbol.iterator in obj;
+const isIterable = (obj: object): obj is Iterable<unknown> =>
+  Symbol.iterator in obj;
 
 const hasIterableEntries = (
-  value: Iterable<unknown>,
+  value: Iterable<unknown>
 ): value is Iterable<unknown> & {
   entries(): Iterable<[unknown, unknown]>;
 } =>
   // HACK: avoid checking entries type
-  "entries" in value;
+  'entries' in value;
 
 const compareEntries = (
   valueA: { entries(): Iterable<[unknown, unknown]> },
-  valueB: { entries(): Iterable<[unknown, unknown]> },
+  valueB: { entries(): Iterable<[unknown, unknown]> }
 ) => {
   const mapA = valueA instanceof Map ? valueA : new Map(valueA.entries());
   const mapB = valueB instanceof Map ? valueB : new Map(valueB.entries());
@@ -26,7 +27,10 @@ const compareEntries = (
 };
 
 // Ordered iterables
-const compareIterables = (valueA: Iterable<unknown>, valueB: Iterable<unknown>) => {
+const compareIterables = (
+  valueA: Iterable<unknown>,
+  valueB: Iterable<unknown>
+) => {
   const iteratorA = valueA[Symbol.iterator]();
   const iteratorB = valueB[Symbol.iterator]();
   let nextA = iteratorA.next();
@@ -45,7 +49,12 @@ export function shallowEquals<T>(valueA: T, valueB: T): boolean {
   if (Object.is(valueA, valueB)) {
     return true;
   }
-  if (typeof valueA !== "object" || valueA === null || typeof valueB !== "object" || valueB === null) {
+  if (
+    typeof valueA !== 'object' ||
+    valueA === null ||
+    typeof valueB !== 'object' ||
+    valueB === null
+  ) {
     return false;
   }
   if (Object.getPrototypeOf(valueA) !== Object.getPrototypeOf(valueB)) {
@@ -63,5 +72,8 @@ export function shallowEquals<T>(valueA: T, valueB: T): boolean {
   }
 
   // assume plain objects
-  return compareEntries({ entries: () => Object.entries(valueA) }, { entries: () => Object.entries(valueB) });
+  return compareEntries(
+    { entries: () => Object.entries(valueA) },
+    { entries: () => Object.entries(valueB) }
+  );
 }
