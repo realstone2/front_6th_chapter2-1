@@ -9,11 +9,6 @@
 
 // 상품 관련 상태
 
-let lastSelected; // 마지막 선택된 상품 ID
-
-// 장바구니 관련 상태
-let totalAmount = 0; // 장바구니 총 금액
-let itemCount; // 장바구니 아이템 총 개수
 let cartDisplay; // 장바구니 UI 요소
 
 // UI 요소 참조
@@ -30,22 +25,11 @@ import {
   PRODUCT_IDS,
   TIMER_INTERVALS,
 } from '../constants/index.ts';
-import { AddToCartButton } from '../features/cart/AddToCartButton.ts';
+import { App } from '../features/layout/App.ts';
 import { calculateCart } from '../features/cart/cartCalculationUtils.ts';
-import { CartDisplay } from '../features/cart/CartDisplay.ts';
 import { CartItem } from '../features/cart/CartItem.ts';
 import { PriceDisplay } from '../features/cart/PriceDisplay.ts';
-import { ProductSelector } from '../features/cart/ProductSelector.ts';
-import { SelectorContainer } from '../features/cart/SelectorContainer.ts';
-import { StockInformation } from '../features/cart/StockInformation.ts';
-import { Header } from '../features/header/Header.ts';
-import { ManualColumn } from '../features/help/ManualColumn.ts';
-import { ManualOverlay } from '../features/help/ManualOverlay.ts';
-import { ManualToggle } from '../features/help/ManualToggle.ts';
-import { GridContainer } from '../features/layout/GridContainer.ts';
-import { LeftColumn } from '../features/layout/LeftColumn.ts';
 import { DiscountInfo } from '../features/order/DiscountInfo.ts';
-import { OrderSummary } from '../features/order/OrderSummary.ts';
 import {
   BulkDiscountSummary,
   CartItemSummary,
@@ -81,9 +65,6 @@ function main() {
   // 1. 상태 초기화 (State Initialization)
   // ========================================
 
-  totalAmount = 0;
-  itemCount = 0;
-
   // ========================================
   // 2. 상품 데이터 초기화 (Product Data Initialization)
   // ========================================
@@ -100,58 +81,36 @@ function main() {
   // 3. DOM 구조 생성 (DOM Structure Creation)
   // ========================================
 
-  // 3.1 루트 요소 및 헤더 생성
+  // 3.1 루트 요소 및 앱 컴포넌트 생성
   const root = document.getElementById('app');
-  const header = Header({ itemCount: 0 });
+  const app = App();
 
-  // 3.2 상품 선택 영역 생성
-  productSelector = ProductSelector();
+  // 3.2 필요한 DOM 요소 참조 설정
+  productSelector = app.querySelector('#product-select');
+  addToCartButton = app.querySelector('#add-to-cart');
+  stockInformation = app.querySelector('#stock-status');
+  cartDisplay = app.querySelector('#cart-items');
+  summaryElement = app.querySelector('#cart-total');
 
-  const gridContainer = GridContainer();
-  const leftColumn = LeftColumn();
+  // 3.3 이벤트 리스너 설정
+  const manualToggle = app.querySelector('#manual-toggle');
+  const manualOverlay = app.querySelector('#manual-overlay');
+  const manualColumn = app.querySelector('#manual-column');
 
-  const selectorContainer = SelectorContainer();
-  productSelector.className =
-    'w-full p-3 border border-gray-300 rounded-lg text-base mb-3';
-
-  // 3.3 버튼 및 재고 정보 영역 생성
-  addToCartButton = AddToCartButton();
-  addToCartButton.id = 'add-to-cart';
-  stockInformation = StockInformation();
-
-  // 3.4 선택 영역 조립
-  selectorContainer.appendChild(productSelector);
-  selectorContainer.appendChild(addToCartButton);
-  selectorContainer.appendChild(stockInformation);
-  leftColumn.appendChild(selectorContainer);
-
-  // 3.5 장바구니 표시 영역 생성
-  cartDisplay = CartDisplay();
-  leftColumn.appendChild(cartDisplay);
-
-  // 3.6 주문 요약 영역 생성
-  const rightColumn = OrderSummary();
-  summaryElement = rightColumn.querySelector('#cart-total');
-  const manualToggle = ManualToggle();
   manualToggle.onclick = function () {
     manualOverlay.classList.toggle('hidden');
     manualColumn.classList.toggle('translate-x-full');
   };
-  const manualOverlay = ManualOverlay();
+
   manualOverlay.onclick = function (e) {
     if (e.target === manualOverlay) {
       manualOverlay.classList.add('hidden');
       manualColumn.classList.add('translate-x-full');
     }
   };
-  const manualColumn = ManualColumn();
-  gridContainer.appendChild(leftColumn);
-  gridContainer.appendChild(rightColumn);
-  manualOverlay.appendChild(manualColumn);
-  root.appendChild(header);
-  root.appendChild(gridContainer);
-  root.appendChild(manualToggle);
-  root.appendChild(manualOverlay);
+
+  // 3.4 앱을 루트에 추가
+  root.appendChild(app);
 
   onUpdateSelectOptions();
   handleCalculateCartStuff();
