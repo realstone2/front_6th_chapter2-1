@@ -47,6 +47,7 @@ import {
 import { initializeProducts } from '../features/product/productUtils.ts';
 import { useProductState } from '../features/product/store/productState.ts';
 import { useCartState } from '../features/cart/store/cartState.ts';
+import { useUIState } from '../features/ui/store/uiState.ts';
 import {
   calculateStockStatus,
   calculateTotalStock,
@@ -77,6 +78,10 @@ function main() {
   const { dispatch: cartDispatch } = useCartState();
   cartDispatch({ type: 'CLEAR_CART' });
 
+  // UI 도메인 상태 초기화
+  const { dispatch: uiDispatch } = useUIState();
+  uiDispatch({ type: 'RESET_UI_STATE' });
+
   // ========================================
   // 3. DOM 구조 생성 (DOM Structure Creation)
   // ========================================
@@ -98,12 +103,24 @@ function main() {
   const manualColumn = app.querySelector('#manual-column');
 
   manualToggle.onclick = function () {
-    manualOverlay.classList.toggle('hidden');
-    manualColumn.classList.toggle('translate-x-full');
+    const { getState: getUIState, dispatch: uiDispatch } = useUIState();
+    const uiState = getUIState();
+
+    if (uiState.modal.isManualOpen) {
+      uiDispatch({ type: 'CLOSE_MANUAL_MODAL' });
+      manualOverlay.classList.add('hidden');
+      manualColumn.classList.add('translate-x-full');
+    } else {
+      uiDispatch({ type: 'OPEN_MANUAL_MODAL' });
+      manualOverlay.classList.remove('hidden');
+      manualColumn.classList.remove('translate-x-full');
+    }
   };
 
   manualOverlay.onclick = function (e) {
     if (e.target === manualOverlay) {
+      const { dispatch: uiDispatch } = useUIState();
+      uiDispatch({ type: 'CLOSE_MANUAL_MODAL' });
       manualOverlay.classList.add('hidden');
       manualColumn.classList.add('translate-x-full');
     }
@@ -271,6 +288,14 @@ function handleCalculateCartStuff() {
 
   // UI 업데이트
   const updatedCartState = getCartState();
+  const { dispatch: uiDispatch } = useUIState();
+
+  // 헤더 아이템 카운트 업데이트
+  uiDispatch({
+    type: 'SET_HEADER_ITEM_COUNT',
+    payload: updatedCartState.itemCount,
+  });
+
   document.getElementById('item-count').textContent =
     '🛍️ ' + updatedCartState.itemCount + ' items in cart';
 
