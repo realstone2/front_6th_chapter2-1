@@ -48,6 +48,7 @@ import { initializeProducts } from '../features/product/productUtils.ts';
 import { useProductState } from '../features/product/store/productState.ts';
 import { useCartState } from '../features/cart/store/cartState.ts';
 import { useUIState } from '../features/ui/store/uiState.ts';
+import { usePointsState } from '../features/points/store/pointsState.ts';
 import {
   calculateStockStatus,
   calculateTotalStock,
@@ -81,6 +82,10 @@ function main() {
   // UI 도메인 상태 초기화
   const { dispatch: uiDispatch } = useUIState();
   uiDispatch({ type: 'RESET_UI_STATE' });
+
+  // 포인트 도메인 상태 초기화
+  const { dispatch: pointsDispatch } = usePointsState();
+  pointsDispatch({ type: 'RESET_POINTS_STATE' });
 
   // ========================================
   // 3. DOM 구조 생성 (DOM Structure Creation)
@@ -339,12 +344,58 @@ function handleCalculateCartStuff() {
       '₩' + Math.round(updatedCartState.finalTotal).toLocaleString();
   }
 
+  // 포인트 계산 및 표시
+  const { dispatch: pointsDispatch, getState: getPointsState } =
+    usePointsState();
+
+  // 화요일 확인
+  const todayForPoints = new Date();
+  const isTuesdayForPoints =
+    todayForPoints.getDay() === BUSINESS_RULES.TUESDAY_DAY_OF_WEEK;
+
+  // 장바구니 아이템 정보 수집
+  const cartItemsForPoints = Array.from(cartDisplay.children).map(item => {
+    const productId = item.id;
+    const quantityElem = item.querySelector('.quantity-number');
+    const quantity = quantityElem ? parseInt(quantityElem.textContent) : 0;
+    return { id: productId, quantity };
+  });
+
+  // 포인트 계산
+  pointsDispatch({
+    type: 'CALCULATE_POINTS',
+    payload: {
+      totalAmount: updatedCartState.finalTotal,
+      cartItems: cartItemsForPoints,
+      isTuesday: isTuesdayForPoints,
+    },
+  });
+
   // 포인트 표시
   const loyaltyPointsDiv = document.getElementById('loyalty-points');
   if (loyaltyPointsDiv) {
-    const points = Math.floor(updatedCartState.finalTotal / 1000);
-    loyaltyPointsDiv.textContent =
-      points > 0 ? `적립 포인트: ${points}p` : '적립 포인트: 0p';
+    const pointsState = getPointsState();
+    const totalPoints = pointsState.currentPoints.total;
+    const calculation = pointsState.currentPoints.calculation;
+
+    // 장바구니가 비어있으면 포인트 섹션 숨김
+    if (cartDisplay.children.length === 0) {
+      loyaltyPointsDiv.style.display = 'none';
+      return;
+    }
+
+    if (totalPoints > 0 && calculation) {
+      // 상세 정보 표시
+      loyaltyPointsDiv.innerHTML = '';
+      loyaltyPointsDiv.appendChild(
+        LoyaltyPoints({
+          bonusPoints: totalPoints,
+          pointsDetail: calculation.details,
+        })
+      );
+    } else {
+      loyaltyPointsDiv.textContent = '적립 포인트: 0p';
+    }
     loyaltyPointsDiv.style.display = 'block';
   }
 
@@ -387,113 +438,12 @@ function handleCalculateCartStuff() {
   stockInformation.textContent = stockStatus.stockMessage;
 
   handleStockInfoUpdate();
-  doRenderBonusPoints();
 }
 /**
  * ========================================
- * 포인트 관련 함수들 (Points Related Functions)
+ * 재고 관련 함수들 (Stock Related Functions)
  * ========================================
  */
-
-/**
- * 보너스 포인트 계산 및 표시
- *
- * 구매 금액, 화요일 특별 이벤트, 세트 구매 등을 고려하여
- * 적립 포인트를 계산하고 UI에 표시합니다.
- */
-const doRenderBonusPoints = function () {
-  let finalPoints;
-  const pointsDetail = [];
-
-  let hasKeyboard;
-  let hasMouse;
-  let hasMonitorArm;
-
-  // 장바구니가 비어있으면 포인트 표시 숨김
-  if (cartDisplay.children.length === 0) {
-    document.getElementById('loyalty-points').style.display = 'none';
-    return;
-  }
-
-  // 장바구니 상태에서 최종 총액 가져오기
-  const { getState: getCartState } = useCartState();
-  const cartState = getCartState();
-
-  // 기본 포인트 계산 (1000원당 1포인트)
-  const basePoints = Math.floor(cartState.finalTotal / 1000);
-  finalPoints = 0;
-
-  if (basePoints > 0) {
-    finalPoints = basePoints;
-    pointsDetail.push('기본: ' + basePoints + 'p');
-  }
-
-  // 화요일 특별 이벤트 (2배 포인트)
-  if (new Date().getDay() === BUSINESS_RULES.TUESDAY_DAY_OF_WEEK) {
-    if (basePoints > 0) {
-      finalPoints = basePoints * 2;
-      pointsDetail.push('화요일 2배');
-    }
-  }
-
-  // 세트 구매 확인
-  hasKeyboard = false;
-  hasMouse = false;
-  hasMonitorArm = false;
-  const nodes = cartDisplay.children;
-
-  // 장바구니에 있는 상품들 확인
-  const { getState } = useProductState();
-  const state = getState();
-  for (const node of nodes) {
-    // 상품 도메인 상태에서 상품 정보 찾기
-    const product = state.products.find(p => p.id === node.id);
-    if (!product) continue;
-
-    // 세트 구성 상품 확인
-    if (product.id === PRODUCT_IDS.KEYBOARD) {
-      hasKeyboard = true;
-    } else if (product.id === PRODUCT_IDS.MOUSE) {
-      hasMouse = true;
-    } else if (product.id === PRODUCT_IDS.MONITOR_ARM) {
-      hasMonitorArm = true;
-    }
-  }
-
-  // 키보드+마우스 세트 보너스
-  if (hasKeyboard && hasMouse) {
-    finalPoints = finalPoints + 50;
-    pointsDetail.push('키보드+마우스 세트 +50p');
-  }
-
-  // 풀세트 보너스 (키보드+마우스+모니터암)
-  if (hasKeyboard && hasMouse && hasMonitorArm) {
-    finalPoints = finalPoints + 100;
-    pointsDetail.push('풀세트 구매 +100p');
-  }
-
-  if (cartState.itemCount >= 30) {
-    finalPoints = finalPoints + 100;
-    pointsDetail.push('대량구매(30개+) +100p');
-  } else {
-    if (cartState.itemCount >= 20) {
-      finalPoints = finalPoints + 50;
-      pointsDetail.push('대량구매(20개+) +50p');
-    } else {
-      if (cartState.itemCount >= 10) {
-        finalPoints = finalPoints + 20;
-        pointsDetail.push('대량구매(10개+) +20p');
-      }
-    }
-  }
-  bonusPoints = finalPoints;
-  const ptsTag = document.getElementById('loyalty-points');
-  if (ptsTag) {
-    ptsTag.innerHTML = '';
-    ptsTag.appendChild(LoyaltyPoints({ bonusPoints, pointsDetail }));
-    ptsTag.style.display = 'block';
-  }
-};
 /**
  * ========================================
  * 재고 관련 함수들 (Stock Related Functions)
