@@ -8,7 +8,7 @@
  */
 
 // 상품 관련 상태
-let productList; // 상품 목록 데이터
+
 let lastSelected; // 마지막 선택된 상품 ID
 
 // 장바구니 관련 상태
@@ -61,6 +61,7 @@ import {
   renderProductOptions,
 } from '../features/product/productOptionUtils.ts';
 import { initializeProducts } from '../features/product/productUtils.ts';
+import { productList } from '../features/product/store/data.ts';
 import {
   calculateStockStatus,
   calculateTotalStock,
@@ -86,8 +87,6 @@ function main() {
   // ========================================
   // 2. 상품 데이터 초기화 (Product Data Initialization)
   // ========================================
-
-  productList = initializeProducts();
 
   // ========================================
   // 3. DOM 구조 생성 (DOM Structure Creation)
