@@ -82,6 +82,23 @@ let summaryElement; // 주문 요약 정보 요소
 // 포인트 관련 상태
 let bonusPoints = 0; // 보너스 포인트
 
+import { Header } from '../features/header/Header.ts';
+import { OrderSummary } from '../features/order/OrderSummary.ts';
+import { ManualToggle } from '../features/help/ManualToggle.ts';
+import { ManualColumn } from '../features/help/ManualColumn.ts';
+import { AddToCartButton } from '../features/cart/AddToCartButton.ts';
+import {
+  CartItemSummary,
+  SubtotalSummary,
+  BulkDiscountSummary,
+  IndividualDiscountSummary,
+  TuesdayDiscountSummary,
+  ShippingSummary,
+} from '../features/order/SummaryDetails.ts';
+import { DiscountInfo } from '../features/order/DiscountInfo.ts';
+import { LoyaltyPoints } from '../features/points/LoyaltyPoints.ts';
+import { PriceDisplay } from '../features/cart/PriceDisplay.ts';
+
 /**
  * ========================================
  * 애플리케이션 초기화 (Application Initialization)
@@ -159,11 +176,7 @@ function main() {
   const root = document.getElementById('app');
   const header = document.createElement('div');
   header.className = 'mb-8';
-  header.innerHTML = `
-    <h1 class="text-xs font-medium tracking-extra-wide uppercase mb-2">🛒 Hanghae Online Store</h1>
-    <div class="text-5xl tracking-tight leading-none">Shopping Cart</div>
-    <p id="item-count" class="text-sm text-gray-500 font-normal mt-3">🛍️ 0 items in cart</p>
-  `;
+  header.innerHTML = Header({ itemCount: 0 });
 
   // 3.2 상품 선택 영역 생성
   productSelector = document.createElement('select');
@@ -187,7 +200,7 @@ function main() {
   addToCartButton.id = 'add-to-cart';
   stockInformation.id = 'stock-status';
   stockInformation.className = 'text-xs text-red-500 mt-3 whitespace-pre-line';
-  addToCartButton.innerHTML = 'Add to Cart';
+  addToCartButton.innerHTML = AddToCartButton();
   addToCartButton.className =
     'w-full py-3 bg-black text-white text-sm font-medium uppercase tracking-wider hover:bg-gray-800 transition-all';
 
@@ -205,35 +218,7 @@ function main() {
   // 3.6 주문 요약 영역 생성
   const rightColumn = document.createElement('div');
   rightColumn.className = 'bg-black text-white p-8 flex flex-col';
-  rightColumn.innerHTML = `
-    <h2 class="text-xs font-medium mb-5 tracking-extra-wide uppercase">Order Summary</h2>
-    <div class="flex-1 flex flex-col">
-      <div id="summary-details" class="space-y-3"></div>
-      <div class="mt-auto">
-        <div id="discount-info" class="mb-4"></div>
-        <div id="cart-total" class="pt-5 border-t border-white/10">
-          <div class="flex justify-between items-baseline">
-            <span class="text-sm uppercase tracking-wider">Total</span>
-            <div class="text-2xl tracking-tight">₩0</div>
-          </div>
-          <div id="loyalty-points" class="text-xs text-blue-400 mt-2 text-right">적립 포인트: 0p</div>
-        </div>
-        <div id="tuesday-special" class="mt-4 p-3 bg-white/10 rounded-lg hidden">
-          <div class="flex items-center gap-2">
-            <span class="text-2xs">🎉</span>
-            <span class="text-xs uppercase tracking-wide">Tuesday Special 10% Applied</span>
-          </div>
-        </div>
-      </div>
-    </div>
-    <button class="w-full py-4 bg-white text-black text-sm font-normal uppercase tracking-super-wide cursor-pointer mt-6 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30">
-      Proceed to Checkout
-    </button>
-    <p class="mt-4 text-2xs text-white/60 text-center leading-relaxed">
-      Free shipping on all orders.<br>
-      <span id="points-notice">Earn loyalty points with purchase.</span>
-    </p>
-  `;
+  rightColumn.innerHTML = OrderSummary();
   summaryElement = rightColumn.querySelector('#cart-total');
   const manualToggle = document.createElement('button');
   manualToggle.onclick = function () {
@@ -242,11 +227,7 @@ function main() {
   };
   manualToggle.className =
     'fixed top-4 right-4 bg-black text-white p-3 rounded-full hover:bg-gray-900 transition-colors z-50';
-  manualToggle.innerHTML = `
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-    </svg>
-  `;
+  manualToggle.innerHTML = ManualToggle();
   const manualOverlay = document.createElement('div');
   manualOverlay.className =
     'fixed inset-0 bg-black/50 z-40 hidden transition-opacity duration-300';
@@ -259,72 +240,7 @@ function main() {
   const manualColumn = document.createElement('div');
   manualColumn.className =
     'fixed right-0 top-0 h-full w-80 bg-white shadow-2xl p-6 overflow-y-auto z-50 transform translate-x-full transition-transform duration-300';
-  manualColumn.innerHTML = `
-    <button class="absolute top-4 right-4 text-gray-500 hover:text-black" onclick="document.querySelector('.fixed.inset-0').classList.add('hidden'); this.parentElement.classList.add('translate-x-full')">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-      </svg>
-    </button>
-    <h2 class="text-xl font-bold mb-4">📖 이용 안내</h2>
-   
-    <div class="mb-6">
-      <h3 class="text-base font-bold mb-3">💰 할인 정책</h3>
-      <div class="space-y-3">
-        <div class="bg-gray-100 rounded-lg p-3">
-          <p class="font-semibold text-sm mb-1">개별 상품</p>
-          <p class="text-gray-700 text-xs pl-2">
-            • 키보드 10개↑: 10%<br>
-            • 마우스 10개↑: 15%<br>
-            • 모니터암 10개↑: 20%<br>
-            • 스피커 10개↑: 25%
-          </p>
-        </div>
-       
-        <div class="bg-gray-100 rounded-lg p-3">
-          <p class="font-semibold text-sm mb-1">전체 수량</p>
-          <p class="text-gray-700 text-xs pl-2">• 30개 이상: 25%</p>
-        </div>
-       
-        <div class="bg-gray-100 rounded-lg p-3">
-          <p class="font-semibold text-sm mb-1">특별 할인</p>
-          <p class="text-gray-700 text-xs pl-2">
-            • 화요일: +10%<br>
-            • ⚡번개세일: 20%<br>
-            • 💝추천할인: 5%
-          </p>
-        </div>
-      </div>
-    </div>
-   
-    <div class="mb-6">
-      <h3 class="text-base font-bold mb-3">🎁 포인트 적립</h3>
-      <div class="space-y-3">
-        <div class="bg-gray-100 rounded-lg p-3">
-          <p class="font-semibold text-sm mb-1">기본</p>
-          <p class="text-gray-700 text-xs pl-2">• 구매액의 0.1%</p>
-        </div>
-       
-        <div class="bg-gray-100 rounded-lg p-3">
-          <p class="font-semibold text-sm mb-1">추가</p>
-          <p class="text-gray-700 text-xs pl-2">
-            • 화요일: 2배<br>
-            • 키보드+마우스: +50p<br>
-            • 풀세트: +100p<br>
-            • 10개↑: +20p / 20개↑: +50p / 30개↑: +100p
-          </p>
-        </div>
-      </div>
-    </div>
-   
-    <div class="border-t border-gray-200 pt-4 mt-4">
-      <p class="text-xs font-bold mb-1">💡 TIP</p>
-      <p class="text-2xs text-gray-600 leading-relaxed">
-        • 화요일 대량구매 = MAX 혜택<br>
-        • ⚡+💝 중복 가능<br>
-        • 상품4 = 품절
-      </p>
-    </div>
-  `;
+  manualColumn.innerHTML = ManualColumn();
   gridContainer.appendChild(leftColumn);
   gridContainer.appendChild(rightColumn);
   manualOverlay.appendChild(manualColumn);
@@ -604,55 +520,25 @@ function handleCalculateCartStuff() {
       const qtyElem = cartItems[i].querySelector('.quantity-number');
       const q = parseInt(qtyElem.textContent);
       const itemTotal = curItem.val * q;
-      summaryDetails.innerHTML += `
-        <div class="flex justify-between text-xs tracking-wide text-gray-400">
-          <span>${curItem.name} x ${q}</span>
-          <span>₩${itemTotal.toLocaleString()}</span>
-        </div>
-      `;
+      summaryDetails.innerHTML += CartItemSummary({
+        item: curItem,
+        quantity: q,
+      });
     }
 
-    summaryDetails.innerHTML += `
-      <div class="border-t border-white/10 my-3"></div>
-      <div class="flex justify-between text-sm tracking-wide">
-        <span>Subtotal</span>
-        <span>₩${subTot.toLocaleString()}</span>
-      </div>
-    `;
+    summaryDetails.innerHTML += SubtotalSummary({ subTotal: subTot });
 
     if (itemCount >= BUSINESS_RULES.BULK_PURCHASE_THRESHOLD) {
-      summaryDetails.innerHTML += `
-        <div class="flex justify-between text-sm tracking-wide text-green-400">
-          <span class="text-xs">🎉 대량구매 할인 (30개 이상)</span>
-          <span class="text-xs">-25%</span>
-        </div>
-      `;
+      summaryDetails.innerHTML += BulkDiscountSummary();
     } else if (itemDiscounts.length > 0) {
-      itemDiscounts.forEach(function (item) {
-        summaryDetails.innerHTML += `
-          <div class="flex justify-between text-sm tracking-wide text-green-400">
-            <span class="text-xs">${item.name} (10개↑)</span>
-            <span class="text-xs">-${item.discount}%</span>
-          </div>
-        `;
-      });
+      summaryDetails.innerHTML += IndividualDiscountSummary({ itemDiscounts });
     }
     if (isTuesday) {
       if (totalAmount > 0) {
-        summaryDetails.innerHTML += `
-          <div class="flex justify-between text-sm tracking-wide text-purple-400">
-            <span class="text-xs">🌟 화요일 추가 할인</span>
-            <span class="text-xs">-10%</span>
-          </div>
-        `;
+        summaryDetails.innerHTML += TuesdayDiscountSummary();
       }
     }
-    summaryDetails.innerHTML += `
-      <div class="flex justify-between text-sm tracking-wide text-gray-400">
-        <span>Shipping</span>
-        <span>Free</span>
-      </div>
-    `;
+    summaryDetails.innerHTML += ShippingSummary();
   }
   const totalDiv = summaryElement.querySelector('.text-2xl');
   if (totalDiv) {
@@ -674,15 +560,7 @@ function handleCalculateCartStuff() {
 
   if (discRate > 0 && totalAmount > 0) {
     savedAmount = originalTotal - totalAmount;
-    discountInfoDiv.innerHTML = `
-      <div class="bg-green-500/20 rounded-lg p-3">
-        <div class="flex justify-between items-center mb-1">
-          <span class="text-xs uppercase tracking-wide text-green-400">총 할인율</span>
-          <span class="text-sm font-medium text-green-400">${(discRate * 100).toFixed(1)}%</span>
-        </div>
-        <div class="text-2xs text-gray-300">₩${Math.round(savedAmount).toLocaleString()} 할인되었습니다</div>
-      </div>
-    `;
+    discountInfoDiv.innerHTML = DiscountInfo({ discRate, savedAmount });
   }
   const itemCountElement = document.getElementById('item-count');
   if (itemCountElement) {
@@ -812,19 +690,8 @@ const doRenderBonusPoints = function () {
   bonusPoints = finalPoints;
   const ptsTag = document.getElementById('loyalty-points');
   if (ptsTag) {
-    if (bonusPoints > 0) {
-      ptsTag.innerHTML =
-        '<div>적립 포인트: <span class="font-bold">' +
-        bonusPoints +
-        'p</span></div>' +
-        '<div class="text-2xs opacity-70 mt-1">' +
-        pointsDetail.join(', ') +
-        '</div>';
-      ptsTag.style.display = 'block';
-    } else {
-      ptsTag.textContent = '적립 포인트: 0p';
-      ptsTag.style.display = 'block';
-    }
+    ptsTag.innerHTML = LoyaltyPoints({ bonusPoints, pointsDetail });
+    ptsTag.style.display = 'block';
   }
 };
 /**
@@ -914,36 +781,15 @@ function doUpdatePricesInCart() {
       const nameDiv = cartItems[i].querySelector('h3');
 
       // 할인 상태에 따른 UI 업데이트
+      priceDiv.innerHTML = PriceDisplay({ product });
+
       if (product.onSale && product.suggestSale) {
-        // 번개세일 + 추천할인 중복 적용
-        priceDiv.innerHTML =
-          '<span class="line-through text-gray-400">₩' +
-          product.originalVal.toLocaleString() +
-          '</span> <span class="text-purple-600">₩' +
-          product.val.toLocaleString() +
-          '</span>';
         nameDiv.textContent = '⚡💝' + product.name;
       } else if (product.onSale) {
-        // 번개세일만 적용
-        priceDiv.innerHTML =
-          '<span class="line-through text-gray-400">₩' +
-          product.originalVal.toLocaleString() +
-          '</span> <span class="text-red-500">₩' +
-          product.val.toLocaleString() +
-          '</span>';
         nameDiv.textContent = '⚡' + product.name;
       } else if (product.suggestSale) {
-        // 추천할인만 적용
-        priceDiv.innerHTML =
-          '<span class="line-through text-gray-400">₩' +
-          product.originalVal.toLocaleString() +
-          '</span> <span class="text-blue-500">₩' +
-          product.val.toLocaleString() +
-          '</span>';
         nameDiv.textContent = '💝' + product.name;
       } else {
-        // 할인 없음
-        priceDiv.textContent = '₩' + product.val.toLocaleString();
         nameDiv.textContent = product.name;
       }
     }
