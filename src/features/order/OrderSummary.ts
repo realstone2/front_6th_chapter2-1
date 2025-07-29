@@ -1,9 +1,11 @@
 /**
  * 주문 요약 컴포넌트
- * @returns 주문 요약 HTML 문자열
+ * @returns 주문 요약 DOM Element
  */
-export function OrderSummary(): string {
-  return `
+export function OrderSummary(): HTMLElement {
+  const orderSummary = document.createElement('div');
+  orderSummary.className = 'bg-black text-white p-8 flex flex-col';
+  orderSummary.innerHTML = `
     <h2 class="text-xs font-medium mb-5 tracking-extra-wide uppercase">Order Summary</h2>
     <div class="flex-1 flex flex-col">
       <div id="summary-details" class="space-y-3"></div>
@@ -32,4 +34,6 @@ export function OrderSummary(): string {
       <span id="points-notice">Earn loyalty points with purchase.</span>
     </p>
   `;
+
+  return orderSummary;
 }

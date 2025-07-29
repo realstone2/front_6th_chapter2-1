@@ -23,43 +23,52 @@ interface SummaryDetailsProps {
 export function CartItemSummary(props: {
   item: CartItem;
   quantity: number;
-}): string {
+}): HTMLElement {
   const { item, quantity } = props;
   const itemTotal = item.val * quantity;
 
-  return `
-    <div class="flex justify-between text-xs tracking-wide text-gray-400">
-      <span>${item.name} x ${quantity}</span>
-      <span>₩${itemTotal.toLocaleString()}</span>
-    </div>
+  const element = document.createElement('div');
+  element.className =
+    'flex justify-between text-xs tracking-wide text-gray-400';
+  element.innerHTML = `
+    <span>${item.name} x ${quantity}</span>
+    <span>₩${itemTotal.toLocaleString()}</span>
   `;
+
+  return element;
 }
 
 /**
  * 서브토탈 컴포넌트
  */
-export function SubtotalSummary(props: { subTotal: number }): string {
+export function SubtotalSummary(props: { subTotal: number }): HTMLElement {
   const { subTotal } = props;
 
-  return `
+  const element = document.createElement('div');
+  element.innerHTML = `
     <div class="border-t border-white/10 my-3"></div>
     <div class="flex justify-between text-sm tracking-wide">
       <span>Subtotal</span>
       <span>₩${subTotal.toLocaleString()}</span>
     </div>
   `;
+
+  return element;
 }
 
 /**
  * 대량구매 할인 컴포넌트
  */
-export function BulkDiscountSummary(): string {
-  return `
-    <div class="flex justify-between text-sm tracking-wide text-green-400">
-      <span class="text-xs">🎉 대량구매 할인 (30개 이상)</span>
-      <span class="text-xs">-25%</span>
-    </div>
+export function BulkDiscountSummary(): HTMLElement {
+  const element = document.createElement('div');
+  element.className =
+    'flex justify-between text-sm tracking-wide text-green-400';
+  element.innerHTML = `
+    <span class="text-xs">🎉 대량구매 할인 (30개 이상)</span>
+    <span class="text-xs">-25%</span>
   `;
+
+  return element;
 }
 
 /**
@@ -67,41 +76,50 @@ export function BulkDiscountSummary(): string {
  */
 export function IndividualDiscountSummary(props: {
   itemDiscounts: Array<{ name: string; discount: number }>;
-}): string {
+}): HTMLElement {
   const { itemDiscounts } = props;
 
-  return itemDiscounts
-    .map(
-      item => `
-    <div class="flex justify-between text-sm tracking-wide text-green-400">
+  const container = document.createElement('div');
+  itemDiscounts.forEach(item => {
+    const element = document.createElement('div');
+    element.className =
+      'flex justify-between text-sm tracking-wide text-green-400';
+    element.innerHTML = `
       <span class="text-xs">${item.name} (10개↑)</span>
       <span class="text-xs">-${item.discount}%</span>
-    </div>
-  `
-    )
-    .join('');
+    `;
+    container.appendChild(element);
+  });
+
+  return container;
 }
 
 /**
  * 화요일 할인 컴포넌트
  */
-export function TuesdayDiscountSummary(): string {
-  return `
-    <div class="flex justify-between text-sm tracking-wide text-purple-400">
-      <span class="text-xs">🌟 화요일 추가 할인</span>
-      <span class="text-xs">-10%</span>
-    </div>
+export function TuesdayDiscountSummary(): HTMLElement {
+  const element = document.createElement('div');
+  element.className =
+    'flex justify-between text-sm tracking-wide text-purple-400';
+  element.innerHTML = `
+    <span class="text-xs">🌟 화요일 추가 할인</span>
+    <span class="text-xs">-10%</span>
   `;
+
+  return element;
 }
 
 /**
  * 배송 정보 컴포넌트
  */
-export function ShippingSummary(): string {
-  return `
-    <div class="flex justify-between text-sm tracking-wide text-gray-400">
-      <span>Shipping</span>
-      <span>Free</span>
-    </div>
+export function ShippingSummary(): HTMLElement {
+  const element = document.createElement('div');
+  element.className =
+    'flex justify-between text-sm tracking-wide text-gray-400';
+  element.innerHTML = `
+    <span>Shipping</span>
+    <span>Free</span>
   `;
+
+  return element;
 }

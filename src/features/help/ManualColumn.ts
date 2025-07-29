@@ -1,9 +1,12 @@
 /**
  * 매뉴얼 컬럼 컴포넌트
- * @returns 매뉴얼 컬럼 HTML 문자열
+ * @returns 매뉴얼 컬럼 DOM Element
  */
-export function ManualColumn(): string {
-  return `
+export function ManualColumn(): HTMLElement {
+  const column = document.createElement('div');
+  column.className =
+    'fixed right-0 top-0 h-full w-80 bg-white shadow-2xl p-6 overflow-y-auto z-50 transform translate-x-full transition-transform duration-300';
+  column.innerHTML = `
     <button class="absolute top-4 right-4 text-gray-500 hover:text-black" onclick="document.querySelector('.fixed.inset-0').classList.add('hidden'); this.parentElement.classList.add('translate-x-full')">
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -69,4 +72,6 @@ export function ManualColumn(): string {
       </p>
     </div>
   `;
+
+  return column;
 }
