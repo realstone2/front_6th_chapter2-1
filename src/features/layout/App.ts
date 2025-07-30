@@ -1,7 +1,6 @@
 import { Header } from '../header/Header.ts';
 import { GridContainer } from './GridContainer.ts';
-import { ManualToggle } from '../help/ManualToggle.ts';
-import { ManualOverlay } from '../help/ManualOverlay.ts';
+import { ManualSection } from '../cart/ManualSection.ts';
 
 /**
  * 앱 컴포넌트
@@ -20,13 +19,7 @@ export function App(): HTMLElement {
   const gridContainer = GridContainer();
   app.appendChild(gridContainer);
 
-  // 매뉴얼 토글 버튼 생성 및 추가
-  const manualToggle = ManualToggle();
-  app.appendChild(manualToggle);
-
-  // 매뉴얼 오버레이 생성 및 추가
-  const manualOverlay = ManualOverlay();
-  app.appendChild(manualOverlay);
+  app.appendChild(ManualSection());
 
   return app;
 }

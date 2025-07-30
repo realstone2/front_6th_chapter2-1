@@ -53,6 +53,7 @@ import {
   calculateStockStatus,
   calculateTotalStock,
 } from '../features/stock/stockUtils.ts';
+import { setupEventListeners } from '../features/events/eventManager.ts';
 
 /**
  * ========================================
@@ -95,6 +96,8 @@ function main() {
   const root = document.getElementById('app');
   const app = App();
 
+  setupEventListeners(app);
+
   // 3.2 필요한 DOM 요소 참조 설정
   productSelector = app.querySelector('#product-select');
   addToCartButton = app.querySelector('#add-to-cart');
@@ -102,37 +105,10 @@ function main() {
   cartDisplay = app.querySelector('#cart-items');
   summaryElement = app.querySelector('#cart-total');
 
-  // 3.3 이벤트 리스너 설정
-  const manualToggle = app.querySelector('#manual-toggle');
-  const manualOverlay = app.querySelector('#manual-overlay');
-  const manualColumn = app.querySelector('#manual-column');
-
-  manualToggle.onclick = function () {
-    const { getState: getUIState, dispatch: uiDispatch } = useUIState();
-    const uiState = getUIState();
-
-    if (uiState.modal.isManualOpen) {
-      uiDispatch({ type: 'CLOSE_MANUAL_MODAL' });
-      manualOverlay.classList.add('hidden');
-      manualColumn.classList.add('translate-x-full');
-    } else {
-      uiDispatch({ type: 'OPEN_MANUAL_MODAL' });
-      manualOverlay.classList.remove('hidden');
-      manualColumn.classList.remove('translate-x-full');
-    }
-  };
-
-  manualOverlay.onclick = function (e) {
-    if (e.target === manualOverlay) {
-      const { dispatch: uiDispatch } = useUIState();
-      uiDispatch({ type: 'CLOSE_MANUAL_MODAL' });
-      manualOverlay.classList.add('hidden');
-      manualColumn.classList.add('translate-x-full');
-    }
-  };
-
   // 3.4 앱을 루트에 추가
-  root.appendChild(app);
+  if (root) {
+    root.appendChild(app);
+  }
 
   onUpdateSelectOptions();
   handleCalculateCartStuff();
@@ -551,7 +527,6 @@ function doUpdatePricesInCart() {
 
 // 애플리케이션 초기화 실행
 main();
-
 /**
  * 장바구니 추가 버튼 이벤트 리스너
  *
