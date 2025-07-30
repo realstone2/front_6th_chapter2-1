@@ -1,7 +1,7 @@
 import { addEvent } from '../events/eventManager.ts';
 import { useProductState } from '../product/store/productState.ts';
 import { CartItem } from './CartItem.ts';
-import { handleCalculateCartStuff } from './cartEventHandlers.ts';
+import { handleCalculateCartStuff } from '../order/orderSummaryHandlers.ts';
 
 /**
  * 장바구니 추가 버튼 컴포넌트

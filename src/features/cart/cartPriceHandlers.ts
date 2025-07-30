@@ -9,7 +9,7 @@
 
 import { useProductState } from '../product/store/productState.ts';
 import { PriceDisplay } from './PriceDisplay.ts';
-import { handleCalculateCartStuff } from './cartEventHandlers.ts';
+import { handleCalculateCartStuff } from '../order/orderSummaryHandlers.ts';
 
 /**
  * 상품 ID로 상품 정보 찾기

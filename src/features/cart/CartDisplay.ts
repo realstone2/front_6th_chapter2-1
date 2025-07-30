@@ -1,7 +1,7 @@
 import { addEvent } from '../events/eventManager.ts';
 import { useProductState } from '../product/store/productState.ts';
 import { BUSINESS_RULES } from '../../constants/index.ts';
-import { handleCalculateCartStuff } from './cartEventHandlers.ts';
+import { handleCalculateCartStuff } from '../order/orderSummaryHandlers.ts';
 
 /**
  * 장바구니 표시 컴포넌트
