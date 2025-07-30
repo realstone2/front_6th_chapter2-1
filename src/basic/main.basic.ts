@@ -12,7 +12,7 @@
 let cartDisplay; // 장바구니 UI 요소
 
 // UI 요소 참조
-let productSelector; // 상품 선택 드롭다운
+// productSelector는 ProductSelector 컴포넌트에서 처리됨
 let addToCartButton; // 장바구니 추가 버튼
 let stockInformation; // 재고 정보 표시 영역
 let summaryElement; // 주문 요약 정보 요소
@@ -54,6 +54,7 @@ import {
   calculateTotalStock,
 } from '../features/stock/stockUtils.ts';
 import { setupEventListeners } from '../features/events/eventManager.ts';
+import { onUpdateSelectOptions } from '../features/product/productEventHandlers.ts';
 
 /**
  * ========================================
@@ -99,7 +100,7 @@ function main() {
   setupEventListeners(app);
 
   // 3.2 필요한 DOM 요소 참조 설정
-  productSelector = app.querySelector('#product-select');
+  // productSelector는 ProductSelector 컴포넌트에서 처리됨
   addToCartButton = app.querySelector('#add-to-cart');
   stockInformation = app.querySelector('#stock-status');
   cartDisplay = app.querySelector('#cart-items');
@@ -174,44 +175,7 @@ function main() {
   }, Math.random() * TIMER_INTERVALS.SUGGESTED_SALE_DELAY);
 }
 
-/**
- * ========================================
- * 상품 관련 함수들 (Product Related Functions)
- * ========================================
- */
-
-/**
- * 상품 선택 옵션 업데이트
- *
- * 상품 목록을 기반으로 드롭다운 옵션을 생성하고 업데이트합니다.
- * 할인 상태, 품절 상태에 따라 옵션 텍스트와 스타일을 변경합니다.
- */
-function onUpdateSelectOptions() {
-  // 드롭다운 초기화
-  productSelector.innerHTML = '';
-
-  // 상품 도메인 상태에서 상품 목록 가져오기
-  const state = useProductState().getState();
-  const products = state.products;
-
-  // 전체 재고 계산
-  const totalStock = calculateTotalStock(products);
-
-  // 상품 옵션 생성 및 렌더링
-  const productOptions = createProductOptions(products);
-  const optionsHTML = renderProductOptions(productOptions);
-  productSelector.innerHTML = optionsHTML;
-
-  // 재고 부족 시 드롭다운 테두리 색상 변경
-  const borderColor = getDropdownBorderColor(totalStock);
-  productSelector.style.borderColor = borderColor;
-
-  // 마지막 선택된 상품이 있으면 선택
-  const lastSelected = state.lastSelected;
-  if (lastSelected) {
-    productSelector.value = lastSelected;
-  }
-}
+// 상품 선택 옵션 업데이트는 ProductSelector 컴포넌트에서 처리됨
 /**
  * ========================================
  * 장바구니 관련 함수들 (Cart Related Functions)

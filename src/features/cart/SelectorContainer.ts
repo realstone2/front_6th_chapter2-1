@@ -1,4 +1,4 @@
-import { ProductSelector } from './ProductSelector.ts';
+import { ProductSelector } from '../product/ProductSelector.ts';
 import { AddToCartButton } from './AddToCartButton.ts';
 import { StockInformation } from './StockInformation.ts';
 
