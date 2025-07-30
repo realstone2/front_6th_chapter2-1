@@ -14,7 +14,7 @@ let cartDisplay; // 장바구니 UI 요소
 // UI 요소 참조
 // productSelector는 ProductSelector 컴포넌트에서 처리됨
 let addToCartButton; // 장바구니 추가 버튼
-let stockInformation; // 재고 정보 표시 영역
+// stockInformation은 StockInformation 컴포넌트에서 처리됨
 let summaryElement; // 주문 요약 정보 요소
 
 // 포인트 관련 상태
@@ -55,6 +55,7 @@ import {
 } from '../features/stock/stockUtils.ts';
 import { setupEventListeners } from '../features/events/eventManager.ts';
 import { onUpdateSelectOptions } from '../features/product/productEventHandlers.ts';
+import { handleStockInfoUpdate } from '../features/stock/stockEventHandlers.ts';
 
 /**
  * ========================================
@@ -102,7 +103,7 @@ function main() {
   // 3.2 필요한 DOM 요소 참조 설정
   // productSelector는 ProductSelector 컴포넌트에서 처리됨
   addToCartButton = app.querySelector('#add-to-cart');
-  stockInformation = app.querySelector('#stock-status');
+  // stockInformation은 StockInformation 컴포넌트에서 처리됨
   cartDisplay = app.querySelector('#cart-items');
   summaryElement = app.querySelector('#cart-total');
 
@@ -313,11 +314,6 @@ function handleCalculateCartStuff() {
   }
 
   // 재고 정보 업데이트
-  const stockStatus = calculateStockStatus(
-    useProductState().getState().products
-  );
-  stockInformation.textContent = stockStatus.stockMessage;
-
   handleStockInfoUpdate();
 }
 /**
@@ -325,62 +321,7 @@ function handleCalculateCartStuff() {
  * 재고 관련 함수들 (Stock Related Functions)
  * ========================================
  */
-/**
- * ========================================
- * 재고 관련 함수들 (Stock Related Functions)
- * ========================================
- */
-
-/**
- * 전체 재고 수량 계산
- *
- * 모든 상품의 재고 수량을 합산하여 반환합니다.
- * @returns {number} 전체 재고 수량
- */
-function onGetStockTotal() {
-  let sum = 0;
-  const products = useProductState().getState().products;
-
-  for (let i = 0; i < products.length; i++) {
-    const currentProduct = products[i];
-    sum += currentProduct.q;
-  }
-  return sum;
-}
-
-/**
- * 재고 정보 업데이트
- *
- * 재고 부족 또는 품절 상태인 상품들의 정보를 수집하고
- * UI에 표시합니다.
- */
-const handleStockInfoUpdate = function () {
-  let infoMsg;
-  infoMsg = '';
-  const totalStock = onGetStockTotal();
-
-  // 전체 재고 부족 시나리오 처리 (향후 확장 예정)
-  if (totalStock < 30) {
-    // Handle low stock scenario if needed
-  }
-
-  // 각 상품의 재고 상태 확인
-  useProductState()
-    .getState()
-    .products.forEach(function (item) {
-      if (item.q < BUSINESS_RULES.LOW_STOCK_THRESHOLD) {
-        if (item.q > 0) {
-          infoMsg =
-            infoMsg + item.name + ': 재고 부족 (' + item.q + '개 남음)\n';
-        } else {
-          infoMsg = infoMsg + item.name + ': 품절\n';
-        }
-      }
-    });
-
-  // 재고 정보 UI 업데이트
-  stockInformation.textContent = infoMsg;
-};
+// 재고 관련 함수들은 stockEventHandlers.ts에서 처리됨
 /**
  * ========================================
  * UI 업데이트 함수들 (UI Update Functions)
