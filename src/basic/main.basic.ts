@@ -56,6 +56,7 @@ import {
 import { setupEventListeners } from '../features/events/eventManager.ts';
 import { onUpdateSelectOptions } from '../features/product/productEventHandlers.ts';
 import { handleStockInfoUpdate } from '../features/stock/stockEventHandlers.ts';
+import { doUpdatePricesInCart } from '../features/cart/cartPriceHandlers.ts';
 
 /**
  * ========================================
@@ -322,49 +323,7 @@ function handleCalculateCartStuff() {
  * ========================================
  */
 // 재고 관련 함수들은 stockEventHandlers.ts에서 처리됨
-/**
- * ========================================
- * UI 업데이트 함수들 (UI Update Functions)
- * ========================================
- */
-
-/**
- * 장바구니 내 상품 가격 업데이트
- *
- * 할인 상태에 따라 장바구니에 표시된 상품들의
- * 가격과 이름을 업데이트합니다.
- */
-function doUpdatePricesInCart() {
-  const cartItems = cartDisplay.children;
-
-  for (let i = 0; i < cartItems.length; i++) {
-    const itemId = cartItems[i].id;
-    // 상품 도메인 상태에서 상품 정보 찾기
-    const product = getProductById(itemId);
-
-    if (product) {
-      const priceDiv = cartItems[i].querySelector('.text-lg');
-      const nameDiv = cartItems[i].querySelector('h3');
-
-      // 할인 상태에 따른 UI 업데이트
-      priceDiv.innerHTML = '';
-      priceDiv.appendChild(PriceDisplay({ product }));
-
-      if (product.onSale && product.suggestSale) {
-        nameDiv.textContent = '⚡💝' + product.name;
-      } else if (product.onSale) {
-        nameDiv.textContent = '⚡' + product.name;
-      } else if (product.suggestSale) {
-        nameDiv.textContent = '💝' + product.name;
-      } else {
-        nameDiv.textContent = product.name;
-      }
-    }
-  }
-
-  // 가격 변경 후 장바구니 재계산
-  handleCalculateCartStuff();
-}
+// 가격 업데이트 관련 함수들은 cartPriceHandlers.ts에서 처리됨
 /**
  * ========================================
  * 애플리케이션 실행 및 이벤트 리스너 등록

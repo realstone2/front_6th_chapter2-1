@@ -10,6 +10,7 @@
 import { useProductState } from './store/productState.ts';
 import { TIMER_INTERVALS } from '../../constants/index.ts';
 import { onUpdateSelectOptions } from './productEventHandlers.ts';
+import { doUpdatePricesInCart } from '../cart/cartPriceHandlers.ts';
 
 /**
  * 번개세일 타이머 핸들러
@@ -32,7 +33,7 @@ const handleLightningSale = () => {
     dispatch({ type: 'UPDATE_PRODUCT', payload: updatedProduct });
     alert('⚡번개세일! ' + luckyItem.name + '이(가) 20% 할인 중입니다!');
     onUpdateSelectOptions();
-    // doUpdatePricesInCart는 main.basic.ts에서 처리됨
+    doUpdatePricesInCart();
   }
 };
 
@@ -74,7 +75,7 @@ const handleSuggestedSale = () => {
       };
       dispatch({ type: 'UPDATE_PRODUCT', payload: updatedProduct });
       onUpdateSelectOptions();
-      // doUpdatePricesInCart는 main.basic.ts에서 처리됨
+      doUpdatePricesInCart();
     }
   }
 };
