@@ -1,12 +1,12 @@
-import { useCartState } from '../features/cart/store/cartState.ts';
-import { setupEventListeners } from '../features/events/eventManager.ts';
-import { App } from '../features/layout/App.ts';
-import { handleCalculateCartStuff } from '../features/order/orderSummaryHandlers.ts';
-import { usePointsState } from '../features/points/store/pointsState.ts';
-import { onUpdateSelectOptions } from '../features/product/productEventHandlers.ts';
-import { initializeProducts } from '../features/product/productUtils.ts';
-import { useProductState } from '../features/product/store/productState.ts';
-import { useUIState } from '../features/ui/store/uiState.ts';
+import { useCartState } from './features/cart/store/cartState';
+import { useProductState } from './features/product/store/productState';
+import { useUIState } from './features/ui/store/uiState';
+import { usePointsState } from './features/points/store/pointsState';
+import { initializeProducts } from './features/product/productUtils';
+import { setupEventListeners } from './features/events/eventManager';
+import { App } from './features/layout/App';
+import { handleCalculateCartStuff } from './features/order/orderSummaryHandlers';
+import { onUpdateSelectOptions } from './features/product/productEventHandlers';
 
 /**
  * ========================================
