@@ -113,66 +113,7 @@ function main() {
 
   onUpdateSelectOptions();
   handleCalculateCartStuff();
-  const lightningDelay = Math.random() * TIMER_INTERVALS.LIGHTNING_SALE_DELAY;
-  setTimeout(() => {
-    setInterval(function () {
-      const { getState, dispatch } = useProductState();
-      const products = getState().products;
-      const luckyIdx = Math.floor(Math.random() * products.length);
-      const luckyItem = products[luckyIdx];
-      if (luckyItem.q > 0 && !luckyItem.onSale) {
-        // 상품 도메인 상태에서 번개세일 적용
-        const updatedProduct = {
-          ...luckyItem,
-          val: Math.round((luckyItem.originalVal * 80) / 100),
-          onSale: true,
-        };
-        dispatch({ type: 'UPDATE_PRODUCT', payload: updatedProduct });
-        alert('⚡번개세일! ' + luckyItem.name + '이(가) 20% 할인 중입니다!');
-        onUpdateSelectOptions();
-        doUpdatePricesInCart();
-      }
-    }, TIMER_INTERVALS.LIGHTNING_SALE_INTERVAL);
-  }, lightningDelay);
-  setTimeout(function () {
-    setInterval(function () {
-      const { getState, dispatch } = useProductState();
-      const state = getState();
-      const lastSelected = state.lastSelected;
-      if (lastSelected) {
-        let suggest = null;
-        const products = state.products;
-
-        for (let k = 0; k < products.length; k++) {
-          if (products[k].id !== lastSelected) {
-            if (products[k].q > 0) {
-              if (!products[k].suggestSale) {
-                suggest = products[k];
-                break;
-              }
-            }
-          }
-        }
-        if (suggest) {
-          alert(
-            '💝 ' +
-              suggest.name +
-              '은(는) 어떠세요? 지금 구매하시면 5% 추가 할인!'
-          );
-
-          // 상품 도메인 상태에서 추천세일 적용
-          const updatedProduct = {
-            ...suggest,
-            val: Math.round((suggest.val * (100 - 5)) / 100),
-            suggestSale: true,
-          };
-          dispatch({ type: 'UPDATE_PRODUCT', payload: updatedProduct });
-          onUpdateSelectOptions();
-          doUpdatePricesInCart();
-        }
-      }
-    }, TIMER_INTERVALS.SUGGESTED_SALE_INTERVAL);
-  }, Math.random() * TIMER_INTERVALS.SUGGESTED_SALE_DELAY);
+  // 타이머 이벤트는 ProductSelector 컴포넌트에서 처리됨
 }
 
 // 상품 선택 옵션 업데이트는 ProductSelector 컴포넌트에서 처리됨

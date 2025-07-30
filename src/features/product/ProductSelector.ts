@@ -6,6 +6,10 @@ import {
   getDropdownBorderColor,
   renderProductOptions,
 } from './productOptionUtils.ts';
+import {
+  startLightningSaleTimer,
+  startSuggestedSaleTimer,
+} from './productTimerHandlers.ts';
 
 /**
  * 상품 선택 드롭다운 컴포넌트
@@ -56,6 +60,10 @@ export function ProductSelector(): HTMLElement {
       productDispatch({ type: 'SET_LAST_SELECTED', payload: selectedValue });
     }
   });
+
+  // 타이머 시작
+  startLightningSaleTimer();
+  startSuggestedSaleTimer();
 
   return productSelector;
 }
