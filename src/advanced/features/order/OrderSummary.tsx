@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useAtomValue } from 'jotai';
 import { useOrderViewModel } from '../../viewmodels/useOrderViewModel';
 import { pointsStateAtom } from '../points/model/PointsModel';
@@ -10,11 +10,6 @@ import { pointsStateAtom } from '../points/model/PointsModel';
 export const OrderSummary: React.FC = () => {
   const orderViewModel = useOrderViewModel();
   const pointsState = useAtomValue(pointsStateAtom);
-
-  // 주문 상태 업데이트
-  useEffect(() => {
-    orderViewModel.updateOrderState();
-  }, [orderViewModel]);
 
   return (
     <div className="bg-black text-white p-8 flex flex-col">

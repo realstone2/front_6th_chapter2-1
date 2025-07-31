@@ -176,11 +176,8 @@ export const useOrderViewModel = () => {
     });
   }, [cartState.items, productState.products]);
 
-  /**
-   * 주문 상태 업데이트
-   * 모든 계산을 수행하고 주문 상태를 업데이트합니다.
-   */
-  const updateOrderState = useCallback(() => {
+  // Cart 상태가 변경될 때마다 자동으로 Order 상태 업데이트
+  useEffect(() => {
     const summary = calculateOrderSummary();
     const discountInfo = calculateDiscountInfo(summary);
     const cartItemSummaries = calculateCartItemSummaries();
@@ -195,19 +192,7 @@ export const useOrderViewModel = () => {
     if (cartState.items.length > 0) {
       calculateAndUpdatePoints(summary.finalTotal, cartState.items);
     }
-  }, [
-    calculateOrderSummary,
-    calculateDiscountInfo,
-    calculateCartItemSummaries,
-    setOrderState,
-    calculateAndUpdatePoints,
-    cartState.items,
-  ]);
-
-  // Cart 상태가 변경될 때마다 자동으로 Order 상태 업데이트
-  useEffect(() => {
-    updateOrderState();
-  }, [cartState.items, updateOrderState]);
+  }, [cartState.items, cartState.itemCount, cartState.totalAmount]);
 
   /**
    * 주문이 비어있는지 확인
@@ -259,7 +244,6 @@ export const useOrderViewModel = () => {
     savedAmount,
 
     // 메서드들
-    updateOrderState,
     calculateOrderSummary,
     calculateDiscountInfo,
     calculateCartItemSummaries,

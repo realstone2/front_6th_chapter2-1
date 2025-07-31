@@ -225,6 +225,14 @@ export const usePointsViewModel = () => {
   const [pointsState, setPointsState] = useAtom(pointsStateAtom);
 
   /**
+   * 화요일 여부 확인
+   */
+  const isTuesday = useCallback(() => {
+    const today = new Date();
+    return today.getDay() === 2; // 0=일요일, 1=월요일, 2=화요일
+  }, []);
+
+  /**
    * 기본 포인트 계산 (상태 기반)
    */
   const calculateBasePoints = useCallback(
@@ -254,6 +262,7 @@ export const usePointsViewModel = () => {
     (cartItems: CartItemModel[]) => {
       const productIds = cartItems.map(item => item.product.id);
 
+      // 키보드 + 마우스 세트 확인
       const hasKeyboard = productIds.includes(PRODUCT_IDS.KEYBOARD);
       const hasMouse = productIds.includes(PRODUCT_IDS.MOUSE);
       const hasMonitorArm = productIds.includes(PRODUCT_IDS.MONITOR_ARM);
@@ -611,6 +620,31 @@ export const usePointsViewModel = () => {
     []
   );
 
+  /**
+   * 포인트 계산 및 상태 업데이트
+   * Order ViewModel에서 호출되는 함수
+   */
+  const calculateAndUpdatePoints = useCallback(
+    (amount: number, cartItems: CartItemModel[]) => {
+      const calculation = calculateTotalPoints(amount, cartItems, isTuesday());
+
+      setPointsState(prev => ({
+        ...prev,
+        currentPoints: {
+          ...prev.currentPoints,
+          total: calculation.totalPoints,
+          calculation,
+          lastCalculated: new Date(),
+        },
+        display: {
+          ...prev.display,
+          isVisible: cartItems.length > 0,
+        },
+      }));
+    },
+    [calculateTotalPoints, isTuesday, setPointsState]
+  );
+
   return {
     // 상태
     currentPoints: pointsState.currentPoints,
@@ -625,6 +659,7 @@ export const usePointsViewModel = () => {
     calculateQuantityBonus,
     calculateTotalPoints,
     calculatePoints,
+    calculateAndUpdatePoints,
 
     // 상태 관리 함수들
     setTotalPoints,

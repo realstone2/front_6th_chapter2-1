@@ -324,20 +324,27 @@ describe('Stock ViewModel', () => {
     it('재고를 감소시킬 수 있어야 함', () => {
       const { result } = renderHookWithProvider(useStockViewModel);
 
-      expect(result.current.decreaseProductStock(PRODUCT_IDS.KEYBOARD, 5)).toBe(
-        true
-      );
-      expect(
-        result.current.decreaseProductStock(PRODUCT_IDS.KEYBOARD, 100)
-      ).toBe(false);
+      act(() => {
+        expect(
+          result.current.decreaseProductStock(PRODUCT_IDS.KEYBOARD, 5)
+        ).toBe(true);
+      });
+
+      act(() => {
+        expect(
+          result.current.decreaseProductStock(PRODUCT_IDS.KEYBOARD, 100)
+        ).toBe(false);
+      });
     });
 
     it('재고를 증가시킬 수 있어야 함', () => {
       const { result } = renderHookWithProvider(useStockViewModel);
 
-      expect(
-        result.current.increaseProductStock(PRODUCT_IDS.KEYBOARD, 10)
-      ).toBe(true);
+      act(() => {
+        expect(
+          result.current.increaseProductStock(PRODUCT_IDS.KEYBOARD, 10)
+        ).toBe(true);
+      });
     });
 
     it('재고 경고 상태를 확인할 수 있어야 함', () => {

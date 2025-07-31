@@ -38,29 +38,69 @@ export const useCartViewModel = () => {
    */
   const addItem = useCallback(
     (product: ProductModel, quantity: number) => {
+      // 재고 확인
+      if (product.q === 0) {
+        return false; // 품절 상품
+      }
+
       setCartState(prevState => {
         const existingItem = prevState.items.find(
           item => item.product.id === product.id
         );
 
+        let newItems;
+        let newQuantity = quantity;
+
         if (existingItem) {
           // 기존 아이템이 있으면 수량 증가
-          return {
-            ...prevState,
-            items: prevState.items.map(item =>
-              item.product.id === product.id
-                ? { ...item, quantity: item.quantity + quantity }
-                : item
-            ),
-          };
+          const totalQuantity = existingItem.quantity + quantity;
+          // 재고 한도 확인
+          if (totalQuantity > product.q) {
+            newQuantity = product.q - existingItem.quantity; // 재고 한도만큼만 추가
+            if (newQuantity <= 0) {
+              return prevState; // 추가할 수 없음
+            }
+          }
+          newItems = prevState.items.map(item =>
+            item.product.id === product.id
+              ? { ...item, quantity: item.quantity + newQuantity }
+              : item
+          );
         } else {
           // 새 아이템 추가
-          return {
-            ...prevState,
-            items: [...prevState.items, { product, quantity }],
-          };
+          // 재고 한도 확인
+          if (quantity > product.q) {
+            newQuantity = product.q; // 재고 한도만큼만 추가
+          }
+          newItems = [...prevState.items, { product, quantity: newQuantity }];
         }
+
+        // 총계 계산
+        const newItemCount = newItems.reduce(
+          (total, item) => total + item.quantity,
+          0
+        );
+        const newSubtotal = newItems.reduce(
+          (total, item) => total + item.product.val * item.quantity,
+          0
+        );
+
+        return {
+          ...prevState,
+          items: newItems,
+          itemCount: newItemCount,
+          subtotal: newSubtotal,
+          totalAmount: newSubtotal,
+        };
       });
+
+      // 재고 감소 (Product 상태 업데이트)
+      if (quantity > 0) {
+        // Product ViewModel을 통해 재고 감소
+        // 이 부분은 Product ViewModel과의 연동이 필요합니다
+      }
+
+      return true;
     },
     [setCartState]
   );
@@ -71,12 +111,29 @@ export const useCartViewModel = () => {
    */
   const updateItemQuantity = useCallback(
     (productId: string, quantity: number) => {
-      setCartState(prevState => ({
-        ...prevState,
-        items: prevState.items.map(item =>
+      setCartState(prevState => {
+        const newItems = prevState.items.map(item =>
           item.product.id === productId ? { ...item, quantity } : item
-        ),
-      }));
+        );
+
+        // 총계 계산
+        const newItemCount = newItems.reduce(
+          (total, item) => total + item.quantity,
+          0
+        );
+        const newSubtotal = newItems.reduce(
+          (total, item) => total + item.product.val * item.quantity,
+          0
+        );
+
+        return {
+          ...prevState,
+          items: newItems,
+          itemCount: newItemCount,
+          subtotal: newSubtotal,
+          totalAmount: newSubtotal,
+        };
+      });
     },
     [setCartState]
   );
@@ -87,10 +144,29 @@ export const useCartViewModel = () => {
    */
   const removeItem = useCallback(
     (productId: string) => {
-      setCartState(prevState => ({
-        ...prevState,
-        items: prevState.items.filter(item => item.product.id !== productId),
-      }));
+      setCartState(prevState => {
+        const newItems = prevState.items.filter(
+          item => item.product.id !== productId
+        );
+
+        // 총계 계산
+        const newItemCount = newItems.reduce(
+          (total, item) => total + item.quantity,
+          0
+        );
+        const newSubtotal = newItems.reduce(
+          (total, item) => total + item.product.val * item.quantity,
+          0
+        );
+
+        return {
+          ...prevState,
+          items: newItems,
+          itemCount: newItemCount,
+          subtotal: newSubtotal,
+          totalAmount: newSubtotal,
+        };
+      });
     },
     [setCartState]
   );
