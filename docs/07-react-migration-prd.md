@@ -1308,6 +1308,141 @@ it('debug failing test', () => {
 
 ### ✅ 완료된 작업 (2025년 8월 1일 기준)
 
+#### Phase 0: MVVM Model Layer 구현 완료 ✅
+**1. 도메인별 Model 생성**
+```
+src/advanced/features/
+├── cart/model/CartModel.ts         ✅ 완료
+├── product/model/ProductModel.ts   ✅ 완료  
+├── order/model/OrderModel.ts       ✅ 완료
+├── points/model/PointsModel.ts     ✅ 완료
+└── ui/model/UIModel.ts             ✅ 완료
+```
+
+**2. Model Layer 구현 내용**
+- **타입 정의**: 기존 Vanilla TypeScript의 인터페이스를 React용으로 변환
+- **초기 데이터**: 기존 basic 버전의 초기 상태값 유지  
+- **Jotai Atoms**: 각 도메인별 상태 관리용 단일 atom 생성
+  - `cartStateAtom`: 장바구니 전체 상태 관리
+  - `productStateAtom`: 상품 전체 상태 관리
+  - `orderStateAtom`: 주문 전체 상태 관리  
+  - `pointsStateAtom`: 포인트 전체 상태 관리
+  - `uiStateAtom`: UI 전체 상태 관리
+
+**3. 핵심 설계 원칙 적용**
+- **순수 상태 관리**: 계산 로직 제거, 순수한 상태 데이터만 보관
+- **도메인 분리**: 각 features 폴더 내 model 디렉토리로 도메인별 격리
+- **기존 구조 유지**: 기존 State 인터페이스 구조 그대로 유지
+- **아토믹 설계**: 하나의 도메인 = 하나의 atom으로 단순화
+
+#### Phase 1: Cart ViewModel Layer 구현 완료 ✅
+**1. Cart ViewModel 훅 구현**
+```
+src/advanced/viewmodels/
+├── useCartViewModel.ts                 ✅ 완료
+├── useCartDiscountViewModel.ts         ✅ 완료
+└── useCartCalculationViewModel.ts      ✅ 완료
+```
+
+**2. Cart ViewModel Layer 구현 내용**
+- **useCartViewModel**: 장바구니 상태 관리 및 CRUD 기능
+  - 아이템 추가/제거/수량변경/비우기
+  - 총계 계산 및 할인 정보 설정
+  - useCartItemViewModel으로 개별 아이템 관리
+- **useCartDiscountViewModel**: 할인 계산 비즈니스 로직
+  - 개별상품 할인 (키보드 10%, 마우스 15%, 모니터암 20%, 스피커 25%)
+  - 대량구매 할인 (30개 이상 시 25% 우선 적용)
+  - 화요일 특별 할인 (10% 추가 할인)
+  - 번개세일/추천할인 적용 함수
+- **useCartCalculationViewModel**: 장바구니 계산 통합 로직
+  - 아이템별 계산 및 총계 계산 (할인 적용)
+  - 할인 혜택 요약 생성 및 표시
+  - 유틸리티 함수들 (비어있는지, 상품 보유 여부, 수량 조회)
+
+**3. View-ViewModel 연결 완료**
+- **App.tsx**: Jotai Provider 설정 및 cartViewModel 연결
+- **ProductSelector.tsx**: 상품 선택 시 productState.lastSelected 업데이트
+- **AddToCartButton.tsx**: 선택된 상품을 장바구니에 추가, 재고 체크
+
+**4. 테스트 환경 구축 완료**
+- **cart-viewmodel.test.tsx**: 14개 테스트 케이스 모두 통과 ✅
+  - useCartViewModel 기본 기능 테스트 (7개)
+  - useCartDiscountViewModel 할인 계산 테스트 (3개)
+  - useCartCalculationViewModel 유틸리티 테스트 (3개)
+  - Cart Integration 통합 테스트 (1개)
+- React Testing Library + Jotai Provider 기반 테스트
+- 장바구니 CRUD, 할인 계산, 통합 시나리오 검증 완료
+
+#### Phase 1: Order ViewModel Layer 구현 완료 ✅
+**1. Order ViewModel 훅 구현**
+```
+src/advanced/viewmodels/
+├── useOrderViewModel.ts                 ✅ 완료
+src/advanced/features/order/
+├── model/OrderModel.ts                  ✅ 완료
+└── OrderSummary.tsx                     ✅ 완료
+```
+
+**2. Order ViewModel Layer 구현 내용**
+- **useOrderViewModel**: 주문 요약 및 할인 계산 비즈니스 로직
+  - 장바구니 상태 기반 주문 요약 계산
+  - 개별 상품 할인 (10개 이상 시 10%-25%)
+  - 대량구매 할인 (30개 이상 시 25% 우선 적용)
+  - 화요일 특별 할인 (10% 추가 할인)
+  - 복합 할인 계산 (개별 + 화요일 할인 중복 적용)
+  - 할인 정보 및 장바구니 아이템 요약 생성
+  - Cart 상태 변경 시 자동 업데이트 (`useEffect` 사용)
+
+**3. Order Model 구현**
+- **OrderModel.ts**: 주문 데이터 구조 및 Jotai atom 정의
+  - `OrderSummaryModel`, `DiscountInfoModel`, `CartItemSummaryModel` 타입 정의
+  - `orderStateAtom`: 주문 전체 상태 관리
+  - 순수한 데이터 상태 관리 (계산 로직은 ViewModel에서 처리)
+
+**4. Order View 연결**
+- **OrderSummary.tsx**: React 컴포넌트로 변환
+  - `useOrderViewModel`과 연결하여 동적 데이터 렌더링
+  - 장바구니 아이템, 할인 정보, 총액 등 실시간 표시
+  - 기존 HTML 구조를 JSX로 완전 변환
+
+**5. 테스트 환경 구축 완료**
+- **order-viewmodel.test.tsx**: 13개 테스트 케이스 모두 통과 ✅
+  - 기본 기능 테스트 (2개): 초기 상태, 장바구니 아이템 추가
+  - 할인 계산 테스트 (3개): 개별 할인, 대량구매 할인, 화요일 할인
+  - 복합 할인 테스트 (2개): 개별+화요일 할인, 대량구매 시 개별 할인 무시
+  - 할인 정보 테스트 (2개): 할인 정보 계산, 빈 장바구니 처리
+  - 장바구니 아이템 요약 테스트 (2개): 단일 상품, 다중 상품 요약
+  - Order Integration 테스트 (1개): 전체 주문 플로우 검증
+- **Jotai Provider 컨텍스트 공유**: Cart와 Order ViewModel이 같은 Provider 인스턴스 사용
+- **상태 동기화**: Cart 상태 변경이 Order ViewModel에 즉시 반영
+
+**6. 핵심 기술적 성과**
+- **MVVM 패턴 완벽 적용**: Model(순수 데이터) - ViewModel(비즈니스 로직) - View(UI) 분리
+- **Jotai 기반 반응형 상태 관리**: Cart 상태 변경 시 Order 자동 업데이트
+- **기존 로직 보존**: `orderSummaryHandlers.ts`의 핵심 비즈니스 로직을 React 훅으로 변환
+- **타입 안전성**: TypeScript로 모든 타입 정의 및 컴파일 에러 해결
+- **테스트 안정성**: React Testing Library + Jotai Provider 기반 견고한 테스트 환경
+
+**7. 해결된 기술적 문제**
+- **Jotai Provider 컨텍스트 공유**: 하나의 `renderHook`에서 두 ViewModel 동시 호출로 상태 동기화 문제 해결
+- **상태 동기화**: Cart와 Order ViewModel 간 실시간 상태 동기화 구현
+- **테스트 격리**: 각 테스트에서 독립적인 Provider 컨텍스트 사용
+
+### 📊 현재 구현 현황 요약
+- **Model Layer**: 5개 도메인 모두 완료 ✅
+- **ViewModel Layer**: Cart, Order 완료 (Product, Points, UI 남음)
+- **View Layer**: Cart, Order 연결 완료 (CartDisplay, 수량조절 남음)
+- **테스트**: Cart 14개, Order 13개 테스트 통과 (총 27개 테스트 완료)
+- **MVVM 패턴**: 성공적으로 적용 및 검증 완료
+- **Jotai 상태 관리**: 반응형 상태 동기화 구현 완료
+
+### 🎯 다음 우선순위
+1. **Product ViewModel**: useProductViewModel, useStockViewModel 구현
+2. **Points ViewModel**: usePointsViewModel 구현  
+3. **UI ViewModel**: useUIViewModel (도움말, 모달) 구현
+4. **CartDisplay 완성**: 장바구니 아이템 목록 표시 기능
+5. **수량 조절 기능**: +/- 버튼 구현
+
 #### Phase 0: MVVM Model Layer 구현 완료
 
 **1. 도메인별 Model 생성**
@@ -1387,6 +1522,64 @@ src/advanced/viewmodels/
 
 ---
 
+#### Phase 1: Order ViewModel Layer 구현 완료 ✅
+
+**1. Order ViewModel 훅 구현**
+```
+src/advanced/viewmodels/
+├── useOrderViewModel.ts                 ✅ 완료
+src/advanced/features/order/
+├── model/OrderModel.ts                  ✅ 완료
+└── OrderSummary.tsx                     ✅ 완료
+```
+
+**2. Order ViewModel Layer 구현 내용**
+- **useOrderViewModel**: 주문 요약 및 할인 계산 비즈니스 로직
+  - 장바구니 상태 기반 주문 요약 계산
+  - 개별 상품 할인 (10개 이상 시 10%-25%)
+  - 대량구매 할인 (30개 이상 시 25% 우선 적용)
+  - 화요일 특별 할인 (10% 추가 할인)
+  - 복합 할인 계산 (개별 + 화요일 할인 중복 적용)
+  - 할인 정보 및 장바구니 아이템 요약 생성
+  - Cart 상태 변경 시 자동 업데이트 (`useEffect` 사용)
+
+**3. Order Model 구현**
+- **OrderModel.ts**: 주문 데이터 구조 및 Jotai atom 정의
+  - `OrderSummaryModel`, `DiscountInfoModel`, `CartItemSummaryModel` 타입 정의
+  - `orderStateAtom`: 주문 전체 상태 관리
+  - 순수한 데이터 상태 관리 (계산 로직은 ViewModel에서 처리)
+
+**4. Order View 연결**
+- **OrderSummary.tsx**: React 컴포넌트로 변환
+  - `useOrderViewModel`과 연결하여 동적 데이터 렌더링
+  - 장바구니 아이템, 할인 정보, 총액 등 실시간 표시
+  - 기존 HTML 구조를 JSX로 완전 변환
+
+**5. 테스트 환경 구축 완료**
+- **order-viewmodel.test.tsx**: 13개 테스트 케이스 모두 통과 ✅
+  - 기본 기능 테스트 (2개): 초기 상태, 장바구니 아이템 추가
+  - 할인 계산 테스트 (3개): 개별 할인, 대량구매 할인, 화요일 할인
+  - 복합 할인 테스트 (2개): 개별+화요일 할인, 대량구매 시 개별 할인 무시
+  - 할인 정보 테스트 (2개): 할인 정보 계산, 빈 장바구니 처리
+  - 장바구니 아이템 요약 테스트 (2개): 단일 상품, 다중 상품 요약
+  - Order Integration 테스트 (1개): 전체 주문 플로우 검증
+- **Jotai Provider 컨텍스트 공유**: Cart와 Order ViewModel이 같은 Provider 인스턴스 사용
+- **상태 동기화**: Cart 상태 변경이 Order ViewModel에 즉시 반영
+
+**6. 핵심 기술적 성과**
+- **MVVM 패턴 완벽 적용**: Model(순수 데이터) - ViewModel(비즈니스 로직) - View(UI) 분리
+- **Jotai 기반 반응형 상태 관리**: Cart 상태 변경 시 Order 자동 업데이트
+- **기존 로직 보존**: `orderSummaryHandlers.ts`의 핵심 비즈니스 로직을 React 훅으로 변환
+- **타입 안전성**: TypeScript로 모든 타입 정의 및 컴파일 에러 해결
+- **테스트 안정성**: React Testing Library + Jotai Provider 기반 견고한 테스트 환경
+
+**7. 해결된 기술적 문제**
+- **Jotai Provider 컨텍스트 공유**: 하나의 `renderHook`에서 두 ViewModel 동시 호출로 상태 동기화 문제 해결
+- **상태 동기화**: Cart와 Order ViewModel 간 실시간 상태 동기화 구현
+- **테스트 격리**: 각 테스트에서 독립적인 Provider 컨텍스트 사용
+
+---
+
 #### Phase 1: Cart ViewModel Layer 구현 완료 ✅
 
 **1. Cart ViewModel 훅 구현**
@@ -1432,19 +1625,23 @@ src/advanced/viewmodels/
 
 ### Phase 1: 나머지 ViewModel Layer 구현 (진행중)
 - [x] ✅ **Cart ViewModel 완료**: useCartViewModel, useCartDiscountViewModel, useCartCalculationViewModel
+- [x] ✅ **Order ViewModel 완료**: useOrderViewModel 구현 및 테스트 완료
 - [ ] **Product ViewModel**: useProductViewModel, useStockViewModel
-- [ ] **Order ViewModel**: useOrderViewModel, usePriceViewModel  
 - [ ] **Points ViewModel**: usePointsViewModel
 - [ ] **UI ViewModel**: useUIViewModel (도움말, 모달 등)
 
-### Phase 2: View Layer 완성 (예정)  
+### Phase 2: View Layer 완성 (진행중)  
 - [x] ✅ **Cart View 연결**: ProductSelector, AddToCartButton ViewModel 연결 완료
+- [x] ✅ **Order View 연결**: OrderSummary.tsx ViewModel 연결 완료
 - [ ] **CartDisplay 완성**: 장바구니 아이템 목록 표시
-- [ ] **OrderSummary 완성**: 주문 요약 정보 표시
 - [ ] **수량 조절**: +/- 버튼 기능 구현
 
-### Phase 3: Integration & Testing (예정)
+### Phase 3: Integration & Testing (진행중)
 - [x] ✅ **Cart 테스트**: 14개 테스트 케이스 통과
+- [x] ✅ **Order 테스트**: 13개 테스트 케이스 통과
+- [ ] **Product 테스트**: Product ViewModel 테스트 구현
+- [ ] **Points 테스트**: Points ViewModel 테스트 구현
+- [ ] **UI 테스트**: UI ViewModel 테스트 구현
 - [ ] React Testing Library 기반 전체 테스트 변환
 - [ ] 기존 50+ 테스트 케이스 React 버전으로 마이그레이션
 - [ ] E2E 테스트 추가
