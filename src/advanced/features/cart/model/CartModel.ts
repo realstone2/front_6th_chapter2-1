@@ -8,7 +8,7 @@
  */
 
 import { atom } from 'jotai';
-import { ProductModel } from './ProductModel';
+import { ProductModel } from '../../product/model/ProductModel';
 
 /**
  * 장바구니 아이템 모델 인터페이스
