@@ -78,7 +78,8 @@
   "react": "^19.1.1",
   "react-dom": "^19.1.1",
   "@types/react": "^18.2.0",
-  "@types/react-dom": "^18.2.0"
+  "@types/react-dom": "^18.2.0",
+  "jotai": "^2.6.0"
 }
 ```
 
@@ -110,21 +111,206 @@
 
 ### 아키텍처 설계
 
-#### 1. 상태 관리 전략
-```typescript
-// React Context API + useReducer 패턴
-interface AppState {
-  cart: CartState;
-  product: ProductState;
-  ui: UIState;
-  points: PointsState;
-}
+#### 1. MVVM 패턴 적용 (Jotai 기반)
+**Model-View-ViewModel 아키텍처로 React 컴포넌트 구조화**
 
-// 도메인별 Context 분리
-const CartContext = createContext<CartContextValue>();
-const ProductContext = createContext<ProductContextValue>();
-const UIContext = createContext<UIContextValue>();
-const PointsContext = createContext<PointsContextValue>();
+```typescript
+// Model: Jotai atom으로 데이터 상태 관리
+import { atom } from 'jotai';
+
+// Product Model Atoms
+export const productsAtom = atom<ProductModel[]>([]);
+export const selectedProductAtom = atom<ProductModel | null>(null);
+export const productStockAtom = atom((get) => {
+  const products = get(productsAtom);
+  return products.reduce((acc, product) => acc + product.stock, 0);
+});
+
+// Cart Model Atoms
+export const cartItemsAtom = atom<CartItemModel[]>([]);
+export const cartTotalPriceAtom = atom((get) => {
+  const items = get(cartItemsAtom);
+  return items.reduce((total, item) => total + (item.price * item.quantity), 0);
+});
+export const cartTotalDiscountAtom = atom((get) => {
+  const items = get(cartItemsAtom);
+  return items.reduce((total, item) => total + (item.discount || 0), 0);
+});
+
+// Order Model Atoms
+export const orderSummaryAtom = atom((get) => {
+  const totalPrice = get(cartTotalPriceAtom);
+  const totalDiscount = get(cartTotalDiscountAtom);
+  return {
+    subtotal: totalPrice,
+    discount: totalDiscount,
+    total: totalPrice - totalDiscount
+  };
+});
+
+// Points Model Atoms
+export const pointsAtom = atom(0);
+export const pointsEarnedAtom = atom((get) => {
+  const orderSummary = get(orderSummaryAtom);
+  return Math.floor(orderSummary.total * 0.001); // 0.1%
+});
+```
+
+```typescript
+// ViewModel: Jotai atom을 조작하는 커스텀 훅
+import { useAtom, useAtomValue } from 'jotai';
+
+const useProductViewModel = () => {
+  const [products, setProducts] = useAtom(productsAtom);
+  const [selectedProduct, setSelectedProduct] = useAtom(selectedProductAtom);
+  const totalStock = useAtomValue(productStockAtom);
+  
+  const addToCart = useCallback((product: ProductModel, quantity: number) => {
+    // 비즈니스 로직 처리 후 atom 업데이트
+  }, []);
+  
+  const calculateDiscount = useCallback((product: ProductModel, quantity: number) => {
+    // 할인 계산 로직
+  }, []);
+  
+  return {
+    products,
+    selectedProduct,
+    totalStock,
+    addToCart,
+    calculateDiscount,
+    setSelectedProduct
+  };
+};
+
+const useCartViewModel = () => {
+  const [cartItems, setCartItems] = useAtom(cartItemsAtom);
+  const totalPrice = useAtomValue(cartTotalPriceAtom);
+  const totalDiscount = useAtomValue(cartTotalDiscountAtom);
+  
+  const addItem = useCallback((product: ProductModel, quantity: number) => {
+    // 장바구니 추가 로직
+  }, []);
+  
+  const removeItem = useCallback((productId: string) => {
+    // 장바구니 제거 로직
+  }, []);
+  
+  return {
+    cartItems,
+    totalPrice,
+    totalDiscount,
+    addItem,
+    removeItem
+  };
+};
+
+// View: ViewModel 훅을 사용하는 UI 컴포넌트
+const ProductView = () => {
+  const productViewModel = useProductViewModel();
+  
+  return (
+    <div>
+      {/* ViewModel에서 제공하는 상태와 함수 사용 */}
+      <select onChange={(e) => productViewModel.setSelectedProduct(/* ... */)}>
+        {productViewModel.products.map(product => (
+          <option key={product.id} value={product.id}>{product.name}</option>
+        ))}
+      </select>
+      <button onClick={() => productViewModel.addToCart(/* ... */)}>
+        장바구니 추가
+      </button>
+    </div>
+  );
+};
+```
+
+#### 2. MVVM 구조 설계 (Jotai 기반)
+```
+src/
+  models/              # Model: Jotai atoms 및 데이터 타입
+    atoms/             # Jotai atom 정의
+      productAtoms.ts
+      cartAtoms.ts
+      orderAtoms.ts
+      pointsAtoms.ts
+      discountAtoms.ts
+    types/             # TypeScript 타입 정의
+      ProductModel.ts
+      CartModel.ts
+      OrderModel.ts
+      PointsModel.ts
+  viewmodels/          # ViewModel: Jotai atom을 조작하는 커스텀 훅
+    useProductViewModel.ts
+    useCartViewModel.ts
+    useOrderViewModel.ts
+    useDiscountViewModel.ts
+    usePointsViewModel.ts
+  views/               # View: UI 컴포넌트 (ViewModel 훅 사용)
+    components/
+      ProductView.tsx
+      CartView.tsx
+      OrderView.tsx
+      PointsView.tsx
+  providers/           # Jotai Provider 설정
+    AppProvider.tsx
+```
+
+#### 3. 상태 관리 전략 (Jotai 기반 MVVM)
+```typescript
+// Jotai atom 기반 상태 관리 (Model 역할)
+import { atom } from 'jotai';
+
+// 도메인별 atom 분리
+const productAtoms = {
+  products: atom<ProductModel[]>([]),
+  selectedProduct: atom<ProductModel | null>(null),
+  productStock: atom((get) => {
+    const products = get(productAtoms.products);
+    return products.reduce((acc, product) => acc + product.stock, 0);
+  })
+};
+
+const cartAtoms = {
+  items: atom<CartItemModel[]>([]),
+  totalPrice: atom((get) => {
+    const items = get(cartAtoms.items);
+    return items.reduce((total, item) => total + (item.price * item.quantity), 0);
+  }),
+  totalDiscount: atom((get) => {
+    const items = get(cartAtoms.items);
+    return items.reduce((total, item) => total + (item.discount || 0), 0);
+  })
+};
+
+const orderAtoms = {
+  summary: atom((get) => {
+    const totalPrice = get(cartAtoms.totalPrice);
+    const totalDiscount = get(cartAtoms.totalDiscount);
+    return {
+      subtotal: totalPrice,
+      discount: totalDiscount,
+      total: totalPrice - totalDiscount
+    };
+  })
+};
+
+const pointsAtoms = {
+  current: atom(0),
+  earned: atom((get) => {
+    const orderSummary = get(orderAtoms.summary);
+    return Math.floor(orderSummary.total * 0.001);
+  })
+};
+
+// Jotai Provider 설정 (ViewModel 제공)
+const AppProvider = ({ children }) => {
+  return (
+    <Provider>
+      {children}
+    </Provider>
+  );
+};
 ```
 
 #### 2. 컴포넌트 구조
@@ -144,25 +330,171 @@ src/
   __tests__/          # 테스트 파일
 ```
 
-#### 3. 커스텀 훅 설계
+#### 3. MVVM 기반 커스텀 훅 설계 (Jotai ViewModel)
 ```typescript
-// 비즈니스 로직을 커스텀 훅으로 추상화
-const useCart = () => {
-  // 장바구니 상태 관리
+// ViewModel 역할을 하는 커스텀 훅들 (Jotai atom 조작)
+import { useAtom, useAtomValue } from 'jotai';
+
+const useProductViewModel = () => {
+  const [products, setProducts] = useAtom(productsAtom);
+  const [selectedProduct, setSelectedProduct] = useAtom(selectedProductAtom);
+  const totalStock = useAtomValue(productStockAtom);
+  
+  const addToCart = useCallback((product: ProductModel, quantity: number) => {
+    // 비즈니스 로직 처리 후 atom 업데이트
+    setProducts(prev => [...prev, product]);
+  }, [setProducts]);
+  
+  const calculateDiscount = useCallback((product: ProductModel, quantity: number) => {
+    // 할인 계산 로직
+    if (quantity >= 10) {
+      return product.price * quantity * 0.1; // 10% 할인
+    }
+    return 0;
+  }, []);
+  
+  return {
+    products,
+    selectedProduct,
+    totalStock,
+    addToCart,
+    calculateDiscount,
+    setSelectedProduct
+  };
 };
 
-const useProduct = () => {
-  // 상품 상태 관리
+const useCartViewModel = () => {
+  const [cartItems, setCartItems] = useAtom(cartItemsAtom);
+  const totalPrice = useAtomValue(cartTotalPriceAtom);
+  const totalDiscount = useAtomValue(cartTotalDiscountAtom);
+  
+  const addItem = useCallback((product: ProductModel, quantity: number) => {
+    // 장바구니 추가 로직
+    setCartItems(prev => [...prev, { ...product, quantity }]);
+  }, [setCartItems]);
+  
+  const removeItem = useCallback((productId: string) => {
+    // 장바구니 제거 로직
+    setCartItems(prev => prev.filter(item => item.id !== productId));
+  }, [setCartItems]);
+  
+  const updateQuantity = useCallback((productId: string, quantity: number) => {
+    // 수량 업데이트 로직
+    setCartItems(prev => prev.map(item => 
+      item.id === productId ? { ...item, quantity } : item
+    ));
+  }, [setCartItems]);
+  
+  return {
+    cartItems,
+    totalPrice,
+    totalDiscount,
+    addItem,
+    removeItem,
+    updateQuantity
+  };
 };
 
-const useDiscount = () => {
-  // 할인 계산 로직
+const useDiscountViewModel = () => {
+  const [discountRules] = useAtom(discountRulesAtom);
+  
+  const calculateIndividualDiscount = useCallback((product: ProductModel, quantity: number) => {
+    // 개별 상품 할인 계산
+    const rule = discountRules.find(r => r.productId === product.id);
+    if (rule && quantity >= rule.minQuantity) {
+      return product.price * quantity * rule.discountRate;
+    }
+    return 0;
+  }, [discountRules]);
+  
+  const calculateBulkDiscount = useCallback((totalQuantity: number) => {
+    // 대량 구매 할인 계산
+    if (totalQuantity >= 30) {
+      return 0.25; // 25% 할인
+    }
+    return 0;
+  }, []);
+  
+  const calculateSpecialDiscount = useCallback((date: Date) => {
+    // 특별 할인 계산 (화요일, 번개세일 등)
+    const isTuesday = date.getDay() === 2;
+    return isTuesday ? 0.1 : 0; // 화요일 10% 할인
+  }, []);
+  
+  return {
+    calculateIndividualDiscount,
+    calculateBulkDiscount,
+    calculateSpecialDiscount
+  };
 };
 
-const usePoints = () => {
-  // 포인트 계산 로직
+const usePointsViewModel = () => {
+  const [points, setPoints] = useAtom(pointsAtom);
+  const earnedPoints = useAtomValue(pointsEarnedAtom);
+  
+  const calculateBasicPoints = useCallback((finalPrice: number) => {
+    // 기본 포인트 계산 (0.1%)
+    return Math.floor(finalPrice * 0.001);
+  }, []);
+  
+  const calculateBonusPoints = useCallback((cartItems: CartItemModel[]) => {
+    // 추가 포인트 계산 (세트 구매, 대량구매 등)
+    let bonus = 0;
+    
+    // 키보드+마우스 세트
+    const hasKeyboard = cartItems.some(item => item.id === 'p1');
+    const hasMouse = cartItems.some(item => item.id === 'p2');
+    if (hasKeyboard && hasMouse) bonus += 50;
+    
+    // 대량구매 보너스
+    const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+    if (totalQuantity >= 30) bonus += 100;
+    else if (totalQuantity >= 20) bonus += 50;
+    else if (totalQuantity >= 10) bonus += 20;
+    
+    return bonus;
+  }, []);
+  
+  const addPoints = useCallback((amount: number) => {
+    setPoints(prev => prev + amount);
+  }, [setPoints]);
+  
+  return {
+    points,
+    earnedPoints,
+    calculateBasicPoints,
+    calculateBonusPoints,
+    addPoints
+  };
 };
 ```
+
+#### 4. Jotai 기반 MVVM 패턴의 장점
+**관심사 분리 (Separation of Concerns):**
+- **Model**: Jotai atom으로 데이터 상태 관리 (중앙 집중식 상태)
+- **View**: UI 렌더링만 담당 (ViewModel 훅 사용)
+- **ViewModel**: Jotai atom을 조작하는 커스텀 훅 (비즈니스 로직)
+
+**Jotai의 장점:**
+- **원자적 상태 관리**: 각 atom이 독립적으로 관리되어 성능 최적화
+- **자동 리렌더링**: 의존하는 atom이 변경될 때만 컴포넌트 리렌더링
+- **타입 안전성**: TypeScript와 완벽한 통합
+- **개발자 도구**: Jotai DevTools로 상태 변화 추적 가능
+
+**테스트 용이성:**
+- ViewModel은 Jotai atom을 모킹하여 테스트 가능
+- View는 ViewModel 훅을 모킹하여 독립적 테스트
+- Model은 순수 함수로 단위 테스트 용이
+
+**재사용성:**
+- ViewModel 훅은 여러 View에서 재사용 가능
+- Jotai atom은 다른 프로젝트에서도 재사용 가능
+- View는 다른 ViewModel 훅과 조합 가능
+
+**유지보수성:**
+- 비즈니스 로직 변경 시 ViewModel 훅만 수정
+- UI 변경 시 View만 수정
+- 데이터 구조 변경 시 Jotai atom만 수정
 
 ---
 
@@ -381,25 +713,64 @@ function App() {
 
 ### Phase 1: 기본 컴포넌트 마이그레이션 (Day 1-3)
 
-#### 1.1 레이아웃 컴포넌트 변환
-- [ ] **App 컴포넌트**: `src/basic/features/layout/App.ts` → React
-- [ ] **Header 컴포넌트**: `src/basic/features/header/Header.ts` → React
-- [ ] **GridContainer**: 좌우 레이아웃 구조
+#### 1.1 MVVM 기반 레이아웃 컴포넌트 변환
+- [ ] **App 컴포넌트**: `src/basic/features/layout/App.ts` → React (View)
+- [ ] **Header 컴포넌트**: `src/basic/features/header/Header.ts` → React (View)
+- [ ] **GridContainer**: 좌우 레이아웃 구조 (View)
+- [ ] **AppViewModel**: 전체 앱 상태 관리 (ViewModel)
+- [ ] **LayoutModel**: 레이아웃 데이터 구조 (Model)
 
-#### 1.2 Context 기반 상태 관리 구축
+#### 1.2 MVVM 기반 Jotai Provider 구조 구축
 ```typescript
-// src/advanced/contexts/AppContext.tsx
+// src/advanced/providers/AppProvider.tsx (Jotai Provider)
+import { Provider } from 'jotai';
+
 const AppProvider = ({ children }) => {
   return (
-    <CartProvider>
-      <ProductProvider>
-        <UIProvider>
-          <PointsProvider>
-            {children}
-          </PointsProvider>
-        </UIProvider>
-      </ProductProvider>
-    </CartProvider>
+    <Provider>
+      {children}
+    </Provider>
+  );
+};
+
+// View 컴포넌트에서 ViewModel 훅 사용 예시
+const ProductView = () => {
+  const productViewModel = useProductViewModel();
+  
+  return (
+    <div>
+      <select onChange={(e) => productViewModel.setSelectedProduct(/* ... */)}>
+        {productViewModel.products.map(product => (
+          <option key={product.id} value={product.id}>{product.name}</option>
+        ))}
+      </select>
+      <button onClick={() => productViewModel.addToCart(/* ... */)}>
+        장바구니 추가
+      </button>
+    </div>
+  );
+};
+
+// View 컴포넌트에서 여러 ViewModel 훅 조합 사용 예시
+const CartView = () => {
+  const cartViewModel = useCartViewModel();
+  const discountViewModel = useDiscountViewModel();
+  const pointsViewModel = usePointsViewModel();
+  
+  return (
+    <div>
+      {cartViewModel.cartItems.map(item => (
+        <CartItem 
+          key={item.id} 
+          item={item}
+          onRemove={() => cartViewModel.removeItem(item.id)}
+          onUpdateQuantity={(quantity) => cartViewModel.updateQuantity(item.id, quantity)}
+        />
+      ))}
+      <div>총 가격: {cartViewModel.totalPrice}</div>
+      <div>할인: {cartViewModel.totalDiscount}</div>
+      <div>적립 포인트: {pointsViewModel.earnedPoints}</div>
+    </div>
   );
 };
 ```
@@ -417,43 +788,169 @@ const renderWithProviders = (ui: React.ReactElement) => {
 
 ### Phase 2: 핵심 기능 컴포넌트 (Day 4-6)
 
-#### 2.1 상품 관련 컴포넌트
-- [ ] **ProductSelector**: 드롭다운 선택기
-- [ ] **StockInformation**: 재고 상태 표시
-- [ ] **AddToCartButton**: 장바구니 추가 버튼
+#### 2.1 MVVM 기반 상품 관련 컴포넌트
+**View (UI 컴포넌트):**
+- [ ] **ProductSelector**: 드롭다운 선택기 (View)
+- [ ] **StockInformation**: 재고 상태 표시 (View)
+- [ ] **AddToCartButton**: 장바구니 추가 버튼 (View)
 
-#### 2.2 장바구니 관련 컴포넌트
-- [ ] **CartDisplay**: 장바구니 전체 영역
-- [ ] **CartItem**: 개별 장바구니 아이템
-- [ ] **QuantityControls**: 수량 증감 버튼
+**ViewModel (비즈니스 로직):**
+- [ ] **useProductViewModel**: 상품 상태 관리 및 비즈니스 로직
+- [ ] **useStockViewModel**: 재고 관리 로직
+- [ ] **useProductSelectionViewModel**: 상품 선택 로직
 
-#### 2.3 주문 관련 컴포넌트
-- [ ] **OrderSummary**: 주문 요약
-- [ ] **PriceDisplay**: 가격 표시
-- [ ] **DiscountInfo**: 할인 정보
+**Model (데이터 구조):**
+- [ ] **ProductModel**: 상품 데이터 구조
+- [ ] **StockModel**: 재고 데이터 구조
+
+#### 2.2 MVVM 기반 장바구니 관련 컴포넌트
+**View (UI 컴포넌트):**
+- [ ] **CartDisplay**: 장바구니 전체 영역 (View)
+- [ ] **CartItem**: 개별 장바구니 아이템 (View)
+- [ ] **QuantityControls**: 수량 증감 버튼 (View)
+
+**ViewModel (비즈니스 로직):**
+- [ ] **useCartViewModel**: 장바구니 상태 관리
+- [ ] **useQuantityViewModel**: 수량 조절 로직
+- [ ] **useCartCalculationViewModel**: 장바구니 계산 로직
+
+**Model (데이터 구조):**
+- [ ] **CartModel**: 장바구니 데이터 구조
+- [ ] **CartItemModel**: 장바구니 아이템 데이터 구조
+
+#### 2.3 MVVM 기반 주문 관련 컴포넌트
+**View (UI 컴포넌트):**
+- [ ] **OrderSummary**: 주문 요약 (View)
+- [ ] **PriceDisplay**: 가격 표시 (View)
+- [ ] **DiscountInfo**: 할인 정보 (View)
+
+**ViewModel (비즈니스 로직):**
+- [ ] **useOrderViewModel**: 주문 상태 관리
+- [ ] **usePriceViewModel**: 가격 계산 로직
+- [ ] **useDiscountViewModel**: 할인 계산 로직
+
+**Model (데이터 구조):**
+- [ ] **OrderModel**: 주문 데이터 구조
+- [ ] **PriceModel**: 가격 데이터 구조
+- [ ] **DiscountModel**: 할인 데이터 구조
 
 ### Phase 3: 비즈니스 로직 마이그레이션 (Day 7-9)
 
-#### 3.1 커스텀 훅 구현
+#### 3.1 MVVM 기반 Jotai ViewModel 구현
 ```typescript
-// 기존 유틸리티 함수들을 React 훅으로 변환
-const useCart = () => {
-  // cartCalculationUtils.ts 로직 활용
+// 기존 유틸리티 함수들을 Jotai ViewModel 훅으로 변환
+const useCartViewModel = () => {
+  // cartCalculationUtils.ts 로직을 Jotai ViewModel로 변환
+  const [cartItems, setCartItems] = useAtom(cartItemsAtom);
+  const totalPrice = useAtomValue(cartTotalPriceAtom);
+  const totalDiscount = useAtomValue(cartTotalDiscountAtom);
+  
+  const addToCart = useCallback((product: ProductModel, quantity: number) => {
+    // 기존 cartCalculationUtils.ts 로직을 Jotai atom으로 변환
+    setCartItems(prev => [...prev, { ...product, quantity }]);
+  }, [setCartItems]);
+  
+  const calculateTotal = useCallback(() => {
+    // 기존 계산 로직을 Jotai derived atom으로 처리
+    return totalPrice - totalDiscount;
+  }, [totalPrice, totalDiscount]);
+  
+  return {
+    cartItems,
+    totalPrice,
+    totalDiscount,
+    addToCart,
+    calculateTotal,
+    // ... 기타 ViewModel 메서드들
+  };
 };
 
-const useDiscount = () => {
-  // discountUtils.ts 로직 활용
+const useDiscountViewModel = () => {
+  // discountUtils.ts 로직을 Jotai ViewModel로 변환
+  const [discountRules] = useAtom(discountRulesAtom);
+  
+  const calculateIndividualDiscount = useCallback((product: ProductModel, quantity: number) => {
+    // 기존 discountUtils.ts 로직을 Jotai atom으로 변환
+    const rule = discountRules.find(r => r.productId === product.id);
+    if (rule && quantity >= rule.minQuantity) {
+      return product.price * quantity * rule.discountRate;
+    }
+    return 0;
+  }, [discountRules]);
+  
+  const calculateBulkDiscount = useCallback((totalQuantity: number) => {
+    // 대량 구매 할인 로직을 Jotai atom으로 처리
+    if (totalQuantity >= 30) {
+      return 0.25; // 25% 할인
+    }
+    return 0;
+  }, []);
+  
+  return {
+    calculateIndividualDiscount,
+    calculateBulkDiscount,
+    // ... 기타 할인 관련 ViewModel 메서드들
+  };
 };
 
-const usePoints = () => {
-  // pointsUtils.ts 로직 활용
+const usePointsViewModel = () => {
+  // pointsUtils.ts 로직을 Jotai ViewModel로 변환
+  const [points, setPoints] = useAtom(pointsAtom);
+  const earnedPoints = useAtomValue(pointsEarnedAtom);
+  
+  const calculateBasicPoints = useCallback((finalPrice: number) => {
+    // 기본 포인트 계산 로직을 Jotai atom으로 변환
+    return Math.floor(finalPrice * 0.001);
+  }, []);
+  
+  const calculateBonusPoints = useCallback((cartItems: CartItemModel[]) => {
+    // 추가 포인트 계산 로직을 Jotai atom으로 변환
+    let bonus = 0;
+    
+    // 키보드+마우스 세트
+    const hasKeyboard = cartItems.some(item => item.id === 'p1');
+    const hasMouse = cartItems.some(item => item.id === 'p2');
+    if (hasKeyboard && hasMouse) bonus += 50;
+    
+    // 대량구매 보너스
+    const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+    if (totalQuantity >= 30) bonus += 100;
+    else if (totalQuantity >= 20) bonus += 50;
+    else if (totalQuantity >= 10) bonus += 20;
+    
+    return bonus;
+  }, []);
+  
+  const addPoints = useCallback((amount: number) => {
+    setPoints(prev => prev + amount);
+  }, [setPoints]);
+  
+  return {
+    points,
+    earnedPoints,
+    calculateBasicPoints,
+    calculateBonusPoints,
+    addPoints,
+    // ... 기타 포인트 관련 ViewModel 메서드들
+  };
 };
 ```
 
-#### 3.2 이벤트 처리 시스템 변환
-- [ ] **DOM 이벤트 리스너** → React 이벤트 핸들러
-- [ ] **eventManager.ts** → 컴포넌트별 이벤트 처리
-- [ ] **상태 동기화** → React 상태 관리
+#### 3.2 MVVM 기반 Jotai 이벤트 처리 시스템 변환
+**View 레벨 이벤트 처리:**
+- [ ] **DOM 이벤트 리스너** → React 이벤트 핸들러 (View)
+- [ ] **이벤트 위임** → 컴포넌트별 이벤트 처리 (View)
+- [ ] **ViewModel 훅 사용** → View에서 ViewModel 훅의 함수 호출
+
+**ViewModel 레벨 비즈니스 로직:**
+- [ ] **eventManager.ts** → Jotai ViewModel 메서드로 변환
+- [ ] **상태 동기화** → Jotai atom 기반 상태 관리
+- [ ] **복잡한 이벤트 로직** → ViewModel에서 처리 후 Jotai atom 업데이트
+
+**Model 레벨 데이터 처리:**
+- [ ] **데이터 변환 로직** → Jotai atom으로 표준화
+- [ ] **타입 안전성** → TypeScript + Jotai atom 타입 정의
+- [ ] **파생 상태** → Jotai derived atom으로 자동 계산
 
 ### Phase 4: 고급 기능 및 최적화 (Day 10-12)
 
