@@ -711,16 +711,119 @@ function App() {
 }
 ```
 
-### Phase 1: 기본 컴포넌트 마이그레이션 (Day 1-3)
+### Phase 1: View 우선 컴포넌트 마이그레이션 (Day 1-3)
 
-#### 1.1 MVVM 기반 레이아웃 컴포넌트 변환
-- [ ] **App 컴포넌트**: `src/basic/features/layout/App.ts` → React (View)
-- [ ] **Header 컴포넌트**: `src/basic/features/header/Header.ts` → React (View)
-- [ ] **GridContainer**: 좌우 레이아웃 구조 (View)
-- [ ] **AppViewModel**: 전체 앱 상태 관리 (ViewModel)
-- [ ] **LayoutModel**: 레이아웃 데이터 구조 (Model)
+#### 1.1 View 우선 개발 전략 (View-First Development)
+**전략 개요:**
+기존 HTML 구조를 React 컴포넌트로 먼저 변환하여 UI 레이아웃을 완성한 후, 단계적으로 비즈니스 로직을 추가하는 방식
 
-#### 1.2 MVVM 기반 Jotai Provider 구조 구축
+**장점:**
+- **빠른 시각적 피드백**: UI 구조를 먼저 확인하여 레이아웃 이슈 조기 발견
+- **점진적 복잡성 관리**: 단순한 View부터 시작하여 복잡도 단계적 증가
+- **팀 협업 효율성**: 디자이너와 개발자 간 UI 검증 가능
+- **테스트 용이성**: View 컴포넌트부터 독립적 테스트 가능
+
+#### 1.2 View 우선 개발 순서
+**1단계: 기본 레이아웃 컴포넌트 (View Only)**
+```typescript
+// 기존 HTML 구조를 React 컴포넌트로 직접 변환
+const App: React.FC = () => {
+  return (
+    <div id="app" className="min-h-screen bg-gray-100 flex flex-col">
+      <Header itemCount={0} /> {/* TODO: 상태 관리 추가 */}
+      <GridContainer />
+      <ManualSection />
+    </div>
+  );
+};
+
+const Header: React.FC<{ itemCount: number }> = ({ itemCount }) => {
+  return (
+    <header className="bg-white shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 py-4">
+        <h1 className="text-2xl font-bold">🛒 Hanghae Online Store</h1>
+        <div className="text-sm text-gray-600">Shopping Cart ({itemCount})</div>
+      </div>
+    </header>
+  );
+};
+```
+
+**2단계: 기능별 View 컴포넌트 (View + TODO 주석)**
+```typescript
+// 장바구니 View 컴포넌트 (상태 관리 로직은 TODO로 표시)
+const CartDisplay: React.FC = () => {
+  // TODO: 장바구니 아이템 상태 관리 및 이벤트 처리는 다음 Phase에서 구현
+  
+  return (
+    <div id="cart-items">
+      <div className="text-gray-500 text-center py-8">
+        장바구니가 비어있습니다
+      </div>
+    </div>
+  );
+};
+
+// 주문 요약 View 컴포넌트 (계산 로직은 TODO로 표시)
+const OrderSummary: React.FC = () => {
+  // TODO: 주문 상태 관리 및 계산 로직은 다음 Phase에서 구현
+  
+  return (
+    <div className="bg-black text-white p-8 flex flex-col">
+      <h2 className="text-xs font-medium mb-5 tracking-extra-wide uppercase">
+        Order Summary
+      </h2>
+      {/* TODO: 동적 데이터 표시 영역 */}
+    </div>
+  );
+};
+```
+
+**3단계: 이벤트 핸들러 준비 (View + 이벤트 함수)**
+```typescript
+// 도움말 모달 View 컴포넌트 (이벤트 핸들러 준비)
+const ManualColumn: React.FC = () => {
+  const handleClose = () => {
+    // TODO: 모달 닫기 로직은 다음 Phase에서 구현
+    console.log('Manual column close clicked');
+  };
+
+  return (
+    <div className="fixed right-0 top-0 h-full w-80 bg-white shadow-2xl">
+      <button onClick={handleClose}>
+        <svg>...</svg>
+      </button>
+      {/* 도움말 내용 */}
+    </div>
+  );
+};
+```
+
+#### 1.3 View 우선 개발의 실제 적용 사례
+**완료된 View 컴포넌트들:**
+- ✅ **App.tsx**: 메인 앱 레이아웃 (View 완료, 상태 관리 TODO)
+- ✅ **Header.tsx**: 헤더 컴포넌트 (View 완료, 아이템 카운트 TODO)
+- ✅ **GridContainer.tsx**: 좌우 레이아웃 구조 (View 완료)
+- ✅ **LeftColumn.tsx**: 좌측 컬럼 레이아웃 (View 완료)
+- ✅ **CartDisplay.tsx**: 장바구니 표시 영역 (View 완료, 상태 관리 TODO)
+- ✅ **AddToCartButton.tsx**: 장바구니 추가 버튼 (View 완료, 이벤트 TODO)
+- ✅ **SelectorContainer.tsx**: 상품 선택 컨테이너 (View 완료, 상태 TODO)
+- ✅ **StockInformation.tsx**: 재고 정보 표시 (View 완료, 동적 데이터 TODO)
+- ✅ **OrderSummary.tsx**: 주문 요약 (View 완료, 계산 로직 TODO)
+- ✅ **ManualColumn.tsx**: 도움말 패널 (View 완료, 닫기 이벤트 TODO)
+- ✅ **ManualOverlay.tsx**: 도움말 배경 (View 완료, 클릭 이벤트 TODO)
+- ✅ **ManualToggle.tsx**: 도움말 토글 버튼 (View 완료, 토글 이벤트 TODO)
+- ✅ **ProductSelector.tsx**: 상품 선택 드롭다운 (View 완료, 선택 이벤트 TODO)
+
+#### 1.4 View 우선 개발의 다음 단계
+**Phase 2에서 추가할 내용:**
+- [ ] **Jotai Provider 구조**: 상태 관리 시스템 구축
+- [ ] **ViewModel 훅**: 비즈니스 로직을 담당하는 커스텀 훅
+- [ ] **Model Atoms**: Jotai atom으로 데이터 상태 관리
+- [ ] **이벤트 핸들러**: View 컴포넌트의 TODO 주석을 실제 로직으로 교체
+- [ ] **상태 연결**: View와 ViewModel 간의 상태 동기화
+
+#### 1.5 MVVM 기반 Jotai Provider 구조 구축
 ```typescript
 // src/advanced/providers/AppProvider.tsx (Jotai Provider)
 import { Provider } from 'jotai';
@@ -786,9 +889,20 @@ const renderWithProviders = (ui: React.ReactElement) => {
 };
 ```
 
-### Phase 2: 핵심 기능 컴포넌트 (Day 4-6)
+### Phase 2: ViewModel 및 상태 관리 구축 (Day 4-6)
 
-#### 2.1 MVVM 기반 상품 관련 컴포넌트
+#### 2.1 View 우선 개발에서 ViewModel로의 전환
+**전략 개요:**
+Phase 1에서 완성한 View 컴포넌트들에 ViewModel 훅을 연결하여 비즈니스 로직을 추가하는 단계
+
+**전환 과정:**
+1. **Jotai Provider 설정**: 상태 관리 시스템 구축
+2. **Model Atoms 생성**: 데이터 상태를 Jotai atom으로 관리
+3. **ViewModel 훅 구현**: 비즈니스 로직을 담당하는 커스텀 훅
+4. **View-ViewModel 연결**: View 컴포넌트에서 ViewModel 훅 사용
+5. **TODO 주석 교체**: Phase 1의 TODO 주석을 실제 로직으로 교체
+
+#### 2.2 MVVM 기반 상품 관련 컴포넌트
 **View (UI 컴포넌트):**
 - [ ] **ProductSelector**: 드롭다운 선택기 (View)
 - [ ] **StockInformation**: 재고 상태 표시 (View)
@@ -1093,18 +1207,24 @@ it('debug failing test', () => {
 - [ ] 에러 없이 "Hello World" 화면 표시
 
 ### Phase 1 완료 체크리스트
-- [ ] App, Header, GridContainer 컴포넌트 변환
-- [ ] Context Provider 구조 구축
-- [ ] 기본 상태 관리 시스템 동작
-- [ ] 간단한 렌더링 테스트 통과
-- [ ] 기존 UI와 동일한 레이아웃 구현
+- [ ] ✅ **View 우선 개발 전략 적용**: 모든 UI 컴포넌트를 View로 먼저 구현
+- [ ] ✅ **기본 레이아웃 컴포넌트**: App, Header, GridContainer, LeftColumn 완료
+- [ ] ✅ **기능별 View 컴포넌트**: Cart, Order, Help, Product 관련 View 완료
+- [ ] ✅ **TODO 주석 체계**: 모든 View 컴포넌트에 다음 Phase 구현 계획 명시
+- [ ] ✅ **UI 레이아웃 완성**: 기존 HTML 구조와 동일한 React 컴포넌트 구조
+- [ ] ✅ **이벤트 핸들러 준비**: onClick, onChange 등 이벤트 함수 구조 준비
+- [ ] ✅ **컴포넌트 분리**: 기능별로 적절한 컴포넌트 분리 완료
+- [ ] ✅ **TypeScript 타입**: 모든 컴포넌트에 적절한 타입 정의
 
 ### Phase 2 완료 체크리스트
-- [ ] 모든 핵심 컴포넌트 변환 완료
-- [ ] 장바구니 추가/제거 기능 동작
-- [ ] 수량 증감 기능 동작
-- [ ] 기본 할인 정책 적용
-- [ ] 포인트 계산 시스템 동작
+- [ ] **Jotai Provider 구조**: 상태 관리 시스템 구축 완료
+- [ ] **Model Atoms**: 모든 도메인별 Jotai atom 생성 완료
+- [ ] **ViewModel 훅**: 비즈니스 로직을 담당하는 커스텀 훅 구현 완료
+- [ ] **View-ViewModel 연결**: Phase 1의 View 컴포넌트에 ViewModel 훅 연결 완료
+- [ ] **TODO 주석 교체**: Phase 1의 TODO 주석을 실제 로직으로 교체 완료
+- [ ] **상태 동기화**: View와 ViewModel 간의 상태 동기화 완료
+- [ ] **이벤트 핸들러**: 모든 View 컴포넌트의 이벤트 핸들러 구현 완료
+- [ ] **기본 CRUD 기능**: 장바구니 추가/제거/수량 변경 기능 동작
 
 ### Phase 3 완료 체크리스트
 - [ ] 모든 비즈니스 로직 React 훅으로 변환
