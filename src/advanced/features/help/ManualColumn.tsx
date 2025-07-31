@@ -1,21 +1,37 @@
 import React from 'react';
+import { useAtom } from 'jotai';
+import { uiStateAtom } from '../ui/model/UIModel';
 
 /**
  * 매뉴얼 컬럼 컴포넌트
+ * UI Model을 직접 구독하여 도움말 패널을 관리합니다.
  * @returns 매뉴얼 컬럼 JSX 엘리먼트
  */
 export const ManualColumn: React.FC = () => {
-  // TODO: 닫기 버튼 클릭 이벤트는 다음 Phase에서 구현
+  const [uiState, setUIState] = useAtom(uiStateAtom);
 
   const handleClose = () => {
-    // 모달 닫기 로직은 다음 Phase에서 구현
-    console.log('Manual column close clicked');
+    setUIState(prev => ({
+      ...prev,
+      modal: {
+        ...prev.modal,
+        isManualOpen: false,
+        isOverlayVisible: false,
+        activeModal: null,
+      },
+      toggle: {
+        ...prev.toggle,
+        isManualToggleActive: false,
+      },
+    }));
   };
 
   return (
     <div
       id="manual-column"
-      className="fixed right-0 top-0 h-full w-80 bg-white shadow-2xl p-6 overflow-y-auto z-50 transform translate-x-full transition-transform duration-300"
+      className={`fixed right-0 top-0 h-full w-80 bg-white shadow-2xl p-6 overflow-y-auto z-50 transition-transform duration-300 ${
+        uiState.modal.isManualOpen ? 'translate-x-0' : 'translate-x-full'
+      }`}
     >
       <button
         onClick={handleClose}

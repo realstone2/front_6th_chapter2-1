@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
+import { useAtomValue } from 'jotai';
 import { useOrderViewModel } from '../../viewmodels/useOrderViewModel';
+import { pointsStateAtom } from '../points/model/PointsModel';
 
 /**
  * 주문 요약 컴포넌트
@@ -7,6 +9,7 @@ import { useOrderViewModel } from '../../viewmodels/useOrderViewModel';
  */
 export const OrderSummary: React.FC = () => {
   const orderViewModel = useOrderViewModel();
+  const pointsState = useAtomValue(pointsStateAtom);
 
   // 주문 상태 업데이트
   useEffect(() => {
@@ -113,7 +116,27 @@ export const OrderSummary: React.FC = () => {
               id="loyalty-points"
               className="text-xs text-blue-400 mt-2 text-right"
             >
-              적립 포인트: 0p
+              {pointsState.currentPoints.total > 0 ? (
+                <>
+                  <div>
+                    적립 포인트:{' '}
+                    <span className="font-bold">
+                      {pointsState.currentPoints.total}p
+                    </span>
+                  </div>
+                  {pointsState.currentPoints.calculation &&
+                    pointsState.currentPoints.calculation.details.length >
+                      0 && (
+                      <div className="text-2xs opacity-70 mt-1">
+                        {pointsState.currentPoints.calculation.details.join(
+                          ', '
+                        )}
+                      </div>
+                    )}
+                </>
+              ) : (
+                <div>적립 포인트: 0p</div>
+              )}
             </div>
           </div>
 

@@ -8,13 +8,14 @@
  */
 
 import { useAtom, useAtomValue } from 'jotai';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import {
   cartStateAtom,
   CartItemModel,
   type CartState,
 } from '../features/cart/model/CartModel';
 import { ProductModel } from '../features/product/model/ProductModel';
+import { useUIViewModel } from './useUIViewModel';
 
 /**
  * 장바구니 ViewModel 훅
@@ -24,6 +25,12 @@ import { ProductModel } from '../features/product/model/ProductModel';
  */
 export const useCartViewModel = () => {
   const [cartState, setCartState] = useAtom(cartStateAtom);
+  const { setHeaderItemCount } = useUIViewModel();
+
+  // 헤더 아이템 카운트 자동 업데이트
+  useEffect(() => {
+    setHeaderItemCount(cartState.itemCount);
+  }, [cartState.itemCount, setHeaderItemCount]);
 
   /**
    * 장바구니에 상품 추가

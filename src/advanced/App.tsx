@@ -14,7 +14,7 @@ const AppContent: React.FC = () => {
   return (
     <div id="app" className="min-h-screen bg-gray-100 flex flex-col">
       {/* 헤더 */}
-      <Header itemCount={cartViewModel.itemCount} />
+      <Header />
 
       {/* 그리드 컨테이너 */}
       <GridContainer />

@@ -1,25 +1,43 @@
 import React from 'react';
+import { useAtom, useAtomValue } from 'jotai';
+import { uiStateAtom } from '../ui/model/UIModel';
 import { ManualColumn } from './ManualColumn';
 
 /**
  * 매뉴얼 오버레이 컴포넌트
+ * UI Model을 직접 구독하여 모달 오버레이를 관리합니다.
  * @returns 매뉴얼 오버레이 JSX 엘리먼트
  */
 export const ManualOverlay: React.FC = () => {
-  // TODO: 오버레이 클릭 이벤트 및 모달 상태 관리는 다음 Phase에서 구현
+  const [uiState, setUIState] = useAtom(uiStateAtom);
 
   const handleOverlayClick = (e: React.MouseEvent) => {
-    // 오버레이 클릭 시 모달 닫기 로직은 다음 Phase에서 구현
     if (e.target === e.currentTarget) {
-      console.log('Overlay clicked - close modal');
+      setUIState(prev => ({
+        ...prev,
+        modal: {
+          ...prev.modal,
+          isManualOpen: false,
+          isOverlayVisible: false,
+          activeModal: null,
+        },
+        toggle: {
+          ...prev.toggle,
+          isManualToggleActive: false,
+        },
+      }));
     }
   };
+
+  if (!uiState.modal.isOverlayVisible) {
+    return null;
+  }
 
   return (
     <div
       id="manual-overlay"
       onClick={handleOverlayClick}
-      className="fixed inset-0 bg-black/50 z-40 hidden transition-opacity duration-300"
+      className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300"
     >
       <ManualColumn />
     </div>

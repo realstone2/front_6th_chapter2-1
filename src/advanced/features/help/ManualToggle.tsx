@@ -1,22 +1,40 @@
 import React from 'react';
+import { useAtom, useAtomValue } from 'jotai';
+import { uiStateAtom } from '../ui/model/UIModel';
 
 /**
  * 매뉴얼 토글 버튼 컴포넌트
+ * UI Model을 직접 구독하여 도움말 모달을 토글합니다.
  * @returns 매뉴얼 토글 버튼 JSX 엘리먼트
  */
 export const ManualToggle: React.FC = () => {
-  // TODO: 클릭 이벤트 및 모달 상태 관리는 다음 Phase에서 구현
+  const [uiState, setUIState] = useAtom(uiStateAtom);
 
   const handleClick = () => {
-    // 모달 토글 로직은 다음 Phase에서 구현
-    console.log('Manual toggle clicked');
+    setUIState(prev => ({
+      ...prev,
+      modal: {
+        ...prev.modal,
+        isManualOpen: !prev.modal.isManualOpen,
+        isOverlayVisible: !prev.modal.isManualOpen,
+        activeModal: !prev.modal.isManualOpen ? 'manual' : null,
+      },
+      toggle: {
+        ...prev.toggle,
+        isManualToggleActive: !prev.modal.isManualOpen,
+      },
+    }));
   };
 
   return (
     <button
       id="manual-toggle"
       onClick={handleClick}
-      className="fixed top-4 right-4 bg-black text-white p-3 rounded-full hover:bg-gray-900 transition-colors z-50"
+      className={`fixed top-4 right-4 p-3 rounded-full transition-colors z-50 ${
+        uiState.toggle.isManualToggleActive
+          ? 'bg-gray-800 text-white'
+          : 'bg-black text-white hover:bg-gray-900'
+      }`}
     >
       <svg
         className="w-5 h-5"
