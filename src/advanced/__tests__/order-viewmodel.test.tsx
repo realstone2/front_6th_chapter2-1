@@ -3,6 +3,7 @@ import { renderHook, act } from '@testing-library/react';
 import { Provider } from 'jotai';
 import { useOrderViewModel } from '../viewmodels/useOrderViewModel';
 import { useCartViewModel } from '../viewmodels/useCartViewModel';
+import { usePointsViewModel } from '../viewmodels/usePointsViewModel';
 import { ProductModel } from '../features/product/model/ProductModel';
 import { describe, expect, it } from 'vitest';
 
@@ -442,6 +443,47 @@ describe('useOrderViewModel', () => {
       expect(result.current.orderViewModel.finalTotal).toBeLessThan(
         result.current.orderViewModel.summary.subtotal
       );
+    });
+
+    it('Order ViewModel이 Points ViewModel과 연동되어야 함', () => {
+      const { result } = renderHook(
+        () => ({
+          cartViewModel: useCartViewModel(),
+          orderViewModel: useOrderViewModel(),
+          pointsViewModel: usePointsViewModel(),
+        }),
+        {
+          wrapper: TestWrapper,
+        }
+      );
+
+      const testProduct = createTestProduct(
+        'p1',
+        '버그 없애는 키보드',
+        10000,
+        50
+      );
+
+      // 1. 장바구니에 추가
+      act(() => {
+        result.current.cartViewModel.addItem(testProduct, 2);
+      });
+
+      // 2. 주문 상태 업데이트 (포인트 계산도 함께 실행됨)
+      act(() => {
+        result.current.orderViewModel.updateOrderState();
+      });
+
+      // 3. 포인트가 계산되었는지 확인
+      expect(
+        result.current.pointsViewModel.currentPoints.total
+      ).toBeGreaterThan(0);
+      expect(
+        result.current.pointsViewModel.currentPoints.calculation
+      ).not.toBeNull();
+      expect(
+        result.current.pointsViewModel.currentPoints.lastCalculated
+      ).not.toBeNull();
     });
   });
 });

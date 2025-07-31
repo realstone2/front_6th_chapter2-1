@@ -8,7 +8,7 @@ import {
 } from '../features/order/model/OrderModel';
 import { cartStateAtom } from '../features/cart/model/CartModel';
 import { productStateAtom } from '../features/product/model/ProductModel';
-import { pointsStateAtom } from '../features/points/model/PointsModel';
+import { usePointsCalculationViewModel } from './usePointsViewModel';
 
 // 비즈니스 규칙 상수 (기존 constants에서 가져옴)
 const BUSINESS_RULES = {
@@ -25,7 +25,7 @@ export const useOrderViewModel = () => {
   const [orderState, setOrderState] = useAtom(orderStateAtom);
   const cartState = useAtomValue(cartStateAtom);
   const productState = useAtomValue(productStateAtom);
-  const pointsState = useAtomValue(pointsStateAtom);
+  const { calculateAndUpdatePoints } = usePointsCalculationViewModel();
 
   /**
    * 주문 요약 정보 계산
@@ -190,11 +190,18 @@ export const useOrderViewModel = () => {
       discountInfo,
       cartItemSummaries,
     });
+
+    // 포인트 계산 및 업데이트
+    if (cartState.items.length > 0) {
+      calculateAndUpdatePoints(summary.finalTotal, cartState.items);
+    }
   }, [
     calculateOrderSummary,
     calculateDiscountInfo,
     calculateCartItemSummaries,
     setOrderState,
+    calculateAndUpdatePoints,
+    cartState.items,
   ]);
 
   // Cart 상태가 변경될 때마다 자동으로 Order 상태 업데이트
