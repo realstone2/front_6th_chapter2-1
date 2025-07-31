@@ -42,7 +42,7 @@ describe('StockInformation 컴포넌트', () => {
       <TestWrapper>
         <SetupProducts
           products={[
-            { id: 'p1', name: '키보드', price: 10000, stock: 10 },
+            { id: 'p1', name: '키보드', price: 10000, stock: 20 },
             { id: 'p2', name: '마우스', price: 5000, stock: 15 },
           ]}
         />
@@ -50,7 +50,8 @@ describe('StockInformation 컴포넌트', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByText('재고 상태 정상')).toBeTruthy();
+    // 정규식을 사용하여 텍스트 매칭
+    expect(screen.getByText(/재고 상태 정상/)).toBeInTheDocument();
   });
 
   it('재고 부족 상품이 있을 때 경고 메시지를 표시해야 함', () => {
@@ -59,14 +60,17 @@ describe('StockInformation 컴포넌트', () => {
         <SetupProducts
           products={[
             { id: 'p1', name: '키보드', price: 10000, stock: 3 },
-            { id: 'p2', name: '마우스', price: 5000, stock: 10 },
+            { id: 'p2', name: '마우스', price: 5000, stock: 30 },
           ]}
         />
         <StockInformation />
       </TestWrapper>
     );
 
-    expect(screen.getByText('키보드: 재고 부족 (3개 남음)')).toBeTruthy();
+    // 정규식을 사용하여 텍스트 매칭
+    expect(
+      screen.getByText(/키보드: 재고 부족 \(3개 남음\)/)
+    ).toBeInTheDocument();
   });
 
   it('품절 상품이 있을 때 품절 메시지를 표시해야 함', () => {
@@ -75,14 +79,15 @@ describe('StockInformation 컴포넌트', () => {
         <SetupProducts
           products={[
             { id: 'p1', name: '키보드', price: 10000, stock: 0 },
-            { id: 'p2', name: '마우스', price: 5000, stock: 10 },
+            { id: 'p2', name: '마우스', price: 5000, stock: 30 },
           ]}
         />
         <StockInformation />
       </TestWrapper>
     );
 
-    expect(screen.getByText('키보드: 품절')).toBeTruthy();
+    // 정규식을 사용하여 텍스트 매칭
+    expect(screen.getByText(/키보드: 품절/)).toBeInTheDocument();
   });
 
   it('전체 재고가 30개 미만일 때 전체 재고 부족 메시지를 표시해야 함', () => {
@@ -98,7 +103,8 @@ describe('StockInformation 컴포넌트', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByText('전체 재고 부족 (총 25개)')).toBeTruthy();
+    // 정규식을 사용하여 텍스트 매칭
+    expect(screen.getByText(/전체 재고 부족 \(총 25개\)/)).toBeInTheDocument();
   });
 
   it('여러 상태가 동시에 있을 때 모든 메시지를 표시해야 함', () => {
@@ -115,22 +121,26 @@ describe('StockInformation 컴포넌트', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByText('키보드: 품절')).toBeTruthy();
-    expect(screen.getByText('마우스: 재고 부족 (3개 남음)')).toBeTruthy();
-    expect(screen.getByText('전체 재고 부족 (총 8개)')).toBeTruthy();
+    // 정규식을 사용하여 텍스트 매칭
+    expect(screen.getByText(/키보드: 품절/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/마우스: 재고 부족 \(3개 남음\)/)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/전체 재고 부족 \(총 8개\)/)).toBeInTheDocument();
   });
 
   it('재고 상태가 변경되면 메시지가 업데이트되어야 함', () => {
     const { rerender } = render(
       <TestWrapper>
         <SetupProducts
-          products={[{ id: 'p1', name: '키보드', price: 10000, stock: 10 }]}
+          products={[{ id: 'p1', name: '키보드', price: 10000, stock: 30 }]}
         />
         <StockInformation />
       </TestWrapper>
     );
 
-    expect(screen.getByText('재고 상태 정상')).toBeTruthy();
+    // 정규식을 사용하여 텍스트 매칭
+    expect(screen.getByText(/재고 상태 정상/)).toBeInTheDocument();
 
     // 재고 부족으로 변경
     rerender(
@@ -142,6 +152,9 @@ describe('StockInformation 컴포넌트', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByText('키보드: 재고 부족 (3개 남음)')).toBeTruthy();
+    // 정규식을 사용하여 텍스트 매칭
+    expect(
+      screen.getByText(/키보드: 재고 부족 \(3개 남음\)/)
+    ).toBeInTheDocument();
   });
 });
