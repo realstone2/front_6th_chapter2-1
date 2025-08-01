@@ -8,11 +8,19 @@
  */
 
 import { useAtom } from 'jotai';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import {
   productStateAtom,
   type ProductModel,
 } from '../features/product/model/ProductModel';
+
+// 타이머 간격 상수들 (기존 constants와 동일)
+const TIMER_INTERVALS = {
+  LIGHTNING_SALE_DELAY: 30000, // 30초 (번개세일 시작 지연)
+  LIGHTNING_SALE_INTERVAL: 30000, // 30초 (번개세일 간격)
+  SUGGESTED_SALE_DELAY: 60000, // 60초 (추천세일 시작 지연)
+  SUGGESTED_SALE_INTERVAL: 60000, // 60초 (추천세일 간격)
+};
 
 /**
  * 상품 ViewModel 훅
@@ -22,6 +30,10 @@ import {
  */
 export const useProductViewModel = () => {
   const [productState, setProductState] = useAtom(productStateAtom);
+  const lightningSaleTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const suggestedSaleTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lightningSaleIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const suggestedSaleIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   /**
    * 상품 목록 설정
@@ -216,6 +228,158 @@ export const useProductViewModel = () => {
     }));
   }, [setProductState]);
 
+  /**
+   * 번개세일 타이머 핸들러
+   * 기존 productTimerHandlers.ts의 handleLightningSale과 동일한 로직
+   */
+  const handleLightningSale = useCallback(() => {
+    const products = productState.products;
+    const availableProducts = products.filter(p => p.q > 0 && !p.onSale);
+
+    if (availableProducts.length === 0) return;
+
+    const luckyIdx = Math.floor(Math.random() * availableProducts.length);
+    const luckyItem = availableProducts[luckyIdx];
+
+    // 번개세일 적용 (20% 할인)
+    const updatedProduct: ProductModel = {
+      ...luckyItem,
+      val: Math.round((luckyItem.originalVal * 80) / 100),
+      onSale: true,
+    };
+
+    updateProduct(updatedProduct);
+    alert('⚡번개세일! ' + luckyItem.name + '이(가) 20% 할인 중입니다!');
+  }, [productState.products, updateProduct]);
+
+  /**
+   * 추천세일 타이머 핸들러
+   * 기존 productTimerHandlers.ts의 handleSuggestedSale과 동일한 로직
+   */
+  const handleSuggestedSale = useCallback(() => {
+    const { lastSelected, products } = productState;
+
+    if (!lastSelected) return;
+
+    // 마지막 선택된 상품과 다른 상품 중에서 추천
+    const suggestableProducts = products.filter(
+      p => p.id !== lastSelected && p.q > 0 && !p.suggestSale
+    );
+
+    if (suggestableProducts.length === 0) return;
+
+    const suggest = suggestableProducts[0]; // 첫 번째 후보 상품
+
+    alert(
+      '💝 ' + suggest.name + '은(는) 어떠세요? 지금 구매하시면 5% 추가 할인!'
+    );
+
+    // 추천세일 적용 (5% 할인)
+    const updatedProduct: ProductModel = {
+      ...suggest,
+      val: Math.round((suggest.val * 95) / 100),
+      suggestSale: true,
+    };
+
+    updateProduct(updatedProduct);
+  }, [productState, updateProduct]);
+
+  /**
+   * 번개세일 타이머 시작
+   * 기존 productTimerHandlers.ts의 startLightningSaleTimer와 동일한 로직
+   */
+  const startLightningSaleTimer = useCallback(() => {
+    // 기존 타이머 정리
+    if (lightningSaleTimerRef.current) {
+      clearTimeout(lightningSaleTimerRef.current);
+    }
+    if (lightningSaleIntervalRef.current) {
+      clearInterval(lightningSaleIntervalRef.current);
+    }
+
+    const lightningDelay = Math.random() * TIMER_INTERVALS.LIGHTNING_SALE_DELAY;
+
+    lightningSaleTimerRef.current = setTimeout(() => {
+      lightningSaleIntervalRef.current = setInterval(
+        handleLightningSale,
+        TIMER_INTERVALS.LIGHTNING_SALE_INTERVAL
+      );
+    }, lightningDelay);
+
+    // 타이머 ID를 상태에 저장
+    setProductState(prev => ({
+      ...prev,
+      lightningSaleTimer: lightningSaleTimerRef.current as any,
+    }));
+  }, [handleLightningSale, setProductState]);
+
+  /**
+   * 추천세일 타이머 시작
+   * 기존 productTimerHandlers.ts의 startSuggestedSaleTimer와 동일한 로직
+   */
+  const startSuggestedSaleTimer = useCallback(() => {
+    // 기존 타이머 정리
+    if (suggestedSaleTimerRef.current) {
+      clearTimeout(suggestedSaleTimerRef.current);
+    }
+    if (suggestedSaleIntervalRef.current) {
+      clearInterval(suggestedSaleIntervalRef.current);
+    }
+
+    const suggestedSaleDelay =
+      Math.random() * TIMER_INTERVALS.SUGGESTED_SALE_DELAY;
+
+    suggestedSaleTimerRef.current = setTimeout(() => {
+      suggestedSaleIntervalRef.current = setInterval(
+        handleSuggestedSale,
+        TIMER_INTERVALS.SUGGESTED_SALE_INTERVAL
+      );
+    }, suggestedSaleDelay);
+
+    // 타이머 ID를 상태에 저장
+    setProductState(prev => ({
+      ...prev,
+      suggestSaleTimer: suggestedSaleTimerRef.current as any,
+    }));
+  }, [handleSuggestedSale, setProductState]);
+
+  /**
+   * 모든 타이머 정리
+   */
+  const clearAllTimers = useCallback(() => {
+    if (lightningSaleTimerRef.current) {
+      clearTimeout(lightningSaleTimerRef.current);
+      lightningSaleTimerRef.current = null;
+    }
+    if (suggestedSaleTimerRef.current) {
+      clearTimeout(suggestedSaleTimerRef.current);
+      suggestedSaleTimerRef.current = null;
+    }
+    if (lightningSaleIntervalRef.current) {
+      clearInterval(lightningSaleIntervalRef.current);
+      lightningSaleIntervalRef.current = null;
+    }
+    if (suggestedSaleIntervalRef.current) {
+      clearInterval(suggestedSaleIntervalRef.current);
+      suggestedSaleIntervalRef.current = null;
+    }
+
+    setProductState(prev => ({
+      ...prev,
+      lightningSaleTimer: null,
+      suggestSaleTimer: null,
+    }));
+  }, [setProductState]);
+
+  /**
+   * 컴포넌트 언마운트 시 타이머 정리
+   */
+  useEffect(() => {
+    return () => {
+      clearAllTimers();
+    };
+  }, [clearAllTimers]);
+
   // ViewModel에서 제공하는 상태와 함수들 반환
   return {
     // 상태 (읽기 전용)
@@ -237,6 +401,16 @@ export const useProductViewModel = () => {
     increaseStock,
     removeProductDiscount,
     removeAllDiscounts,
+
+    // 타이머 관련 함수들 (새로 추가)
+    startLightningSaleTimer,
+    startSuggestedSaleTimer,
+    clearAllTimers,
+    handleLightningSale,
+    handleSuggestedSale,
+
+    // 상수들
+    TIMER_INTERVALS,
   };
 };
 

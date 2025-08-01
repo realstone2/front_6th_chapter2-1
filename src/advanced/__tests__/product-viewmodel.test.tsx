@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { Provider } from 'jotai';
 import {
@@ -20,6 +20,12 @@ import {
   useStockItemViewModel,
 } from '../viewmodels/useStockViewModel';
 import { PRODUCT_IDS } from '../features/product/model/ProductModel';
+
+// alert 모킹
+global.alert = vi.fn();
+
+// 타이머 모킹
+vi.useFakeTimers();
 
 /**
  * 테스트용 Provider 래퍼
@@ -33,6 +39,17 @@ const renderHookWithProvider = <T,>(hook: () => T) => {
 };
 
 describe('Product ViewModel', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.clearAllTimers();
+  });
+
+  afterEach(() => {
+    vi.runOnlyPendingTimers();
+    vi.useRealTimers();
+    vi.useFakeTimers();
+  });
+
   describe('useProductViewModel', () => {
     it('초기 상태가 올바르게 설정되어야 함', () => {
       const { result } = renderHookWithProvider(useProductViewModel);
@@ -188,6 +205,85 @@ describe('Product ViewModel', () => {
         expect(product.suggestSale).toBe(false);
         expect(product.val).toBe(product.originalVal);
       });
+    });
+  });
+
+  describe('useProductViewModel 타이머 기능', () => {
+    it('번개세일 타이머를 시작할 수 있어야 함', () => {
+      const { result } = renderHookWithProvider(useProductViewModel);
+
+      act(() => {
+        result.current.startLightningSaleTimer();
+      });
+
+      expect(result.current.productState.lightningSaleTimer).not.toBeNull();
+    });
+
+    it('추천세일 타이머를 시작할 수 있어야 함', () => {
+      const { result } = renderHookWithProvider(useProductViewModel);
+
+      act(() => {
+        result.current.startSuggestedSaleTimer();
+      });
+
+      expect(result.current.productState.suggestSaleTimer).not.toBeNull();
+    });
+
+    it('번개세일 핸들러가 재고 있는 상품에 할인을 적용해야 함', () => {
+      const { result } = renderHookWithProvider(useProductViewModel);
+
+      act(() => {
+        result.current.handleLightningSale();
+      });
+
+      // 재고가 있는 상품 중 하나가 번개세일 적용되었는지 확인
+      const onSaleProducts = result.current.products.filter(p => p.onSale);
+      expect(onSaleProducts.length).toBeGreaterThan(0);
+      expect(global.alert).toHaveBeenCalledWith(
+        expect.stringContaining('⚡번개세일!')
+      );
+    });
+
+    it('추천세일 핸들러가 선택된 상품과 다른 상품에 할인을 적용해야 함', () => {
+      const { result } = renderHookWithProvider(useProductViewModel);
+
+      // 키보드 선택
+      act(() => {
+        result.current.setLastSelected(PRODUCT_IDS.KEYBOARD);
+      });
+
+      // 추천세일 실행
+      act(() => {
+        result.current.handleSuggestedSale();
+      });
+
+      // 키보드가 아닌 다른 상품이 추천세일 적용되었는지 확인
+      const suggestedProducts = result.current.products.filter(
+        p => p.suggestSale
+      );
+      expect(suggestedProducts.length).toBeGreaterThan(0);
+      expect(suggestedProducts.every(p => p.id !== PRODUCT_IDS.KEYBOARD)).toBe(
+        true
+      );
+      expect(global.alert).toHaveBeenCalledWith(expect.stringContaining('💝'));
+    });
+
+    it('모든 타이머를 정리할 수 있어야 함', () => {
+      const { result } = renderHookWithProvider(useProductViewModel);
+
+      // 타이머 시작
+      act(() => {
+        result.current.startLightningSaleTimer();
+        result.current.startSuggestedSaleTimer();
+      });
+
+      // 타이머 정리
+      act(() => {
+        result.current.clearAllTimers();
+      });
+
+      expect(result.current.productState.lightningSaleTimer).toBeNull();
+      expect(result.current.productState.suggestSaleTimer).toBeNull();
     });
   });
 
